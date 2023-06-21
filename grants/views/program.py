@@ -243,7 +243,6 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
         headers = ["Email", "Has Scored", "Average Score"] + [
             question.question for question in questions.only("question")
         ]
-        print(headers)
         writer.writerow(headers)  # Write headers
 
         for applicant in applicants:
