@@ -239,12 +239,33 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
         response["Content-Disposition"] = 'attachment; filename="applicants.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(["Email", "Has Scored", "Average Score"])  # Write headers
+        questions = self.program.questions.order_by("order")
+        headers = ["Email", "Has Scored", "Average Score"] + [
+            question.question for question in questions.only("question")
+        ]
+        print(headers)
+        writer.writerow(headers)  # Write headers
 
         for applicant in applicants:
-            writer.writerow(
-                [applicant.email, applicant.has_scored, applicant.average_score]
-            )
+            row = [applicant.email, applicant.has_scored, applicant.average_score]
+            questions = self.program.questions.order_by("order")
+            for question in questions:
+                try:
+                    value = (
+                        Answer.objects.filter(
+                            applicant=applicant,
+                            question=question,
+                        )
+                        .only("answer")
+                        .first()
+                        .answer
+                    )
+                except Exception as e:
+                    print(f"{e=}")
+                    value = ""
+                row += [value]
+
+            writer.writerow(row)
 
         return response
 
