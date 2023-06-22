@@ -240,13 +240,18 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
 
         writer = csv.writer(response)
         questions = self.program.questions.order_by("order")
-        headers = ["Email", "Has Scored", "Average Score"] + [
+        headers = ["Email", "Name", "Has Scored", "Average Score"] + [
             question.question for question in questions.only("question")
         ]
         writer.writerow(headers)  # Write headers
 
         for applicant in applicants:
-            row = [applicant.email, applicant.has_scored, applicant.average_score]
+            row = [
+                applicant.email,
+                applicant.name,
+                applicant.has_scored,
+                applicant.average_score,
+            ]
             questions = self.program.questions.order_by("order")
             for question in questions:
                 try:
