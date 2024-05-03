@@ -27,6 +27,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(models.Applicant)
 class ApplicantAdmin(admin.ModelAdmin):
+    list_filter = ["program"]
     list_display = ["id", "name", "email", "program", "applied"]
     list_display_links = ["id", "name"]
     inlines = [AnswerInline]
