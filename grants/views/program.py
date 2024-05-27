@@ -222,7 +222,10 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
         # Fetch applicants
         # but don't let a user see their own request
         applicants = list(
-            self.program.applicants.exclude(email=self.request.user.email)
+            self.program.applicants.exclude(
+                Q(email=self.request.user.email) |
+                Q(name=self.request.user.get_full_name())
+            )
             .prefetch_related("scores")
             .order_by("-applied")
         )
@@ -291,7 +294,8 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
 
     def get(self, request, applicant_id):
         applicant = self.program.applicants.exclude(
-            email=self.request.user.email,
+            Q(email=self.request.user.email) |
+            Q(name=self.request.user.get_full_name())
         ).get(pk=applicant_id)
         questions = list(self.program.questions.order_by("order"))
         for question in questions:
@@ -349,7 +353,9 @@ class RandomUnscoredApplicant(ProgramMixin, View):
     def get(self, request):
         applicant = (
             self.program.applicants.exclude(
-                Q(scores__user=self.request.user) | Q(email=self.request.user.email)
+                Q(scores__user=self.request.user) |
+                Q(email=self.request.user.email) |
+                Q(name=self.request.user.get_full_name())
             )
             .order_by("?")
             .first()
