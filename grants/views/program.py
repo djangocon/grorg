@@ -181,7 +181,10 @@ class ProgramApplicants(ProgramMixin, ListView):
         # Fetch applicants
         # but don't let a user see their own request
         applicants = list(
-            self.program.applicants.exclude(email=self.request.user.email)
+            self.program.applicants.exclude(
+                Q(email=self.request.user.email) |
+                Q(name=self.request.user.get_full_name())
+            )
             .prefetch_related("scores")
             .order_by("-applied")
         )
