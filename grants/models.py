@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from statistics import mean, variance, stdev
-
 from django.db import models
 from urlman import Urls
 
@@ -143,19 +141,24 @@ class Applicant(models.Model):
         scores = [s.score for s in self.scores.all() if s.score]
         if not scores:
             return None
-        return mean(scores)
+        else:
+            return sum(scores) / float(len(scores))
 
     def variance(self):
         data = [s.score for s in self.scores.all() if s.score]
-        if not data:
+        n = len(data)
+        if n == 0:
             return 0
-        return variance(data)
+        c = sum(data) / float(len(data))
+        if n < 2:
+            return 0
+        ss = sum((x - c) ** 2 for x in data)
+        ss -= sum((x - c) for x in data) ** 2 / len(data)
+        assert not ss < 0, "negative sum of square deviations: %f" % ss
+        return ss / (n - 1)
 
     def stdev(self):
-        data = [s.score for s in self.scores.all() if s.score]
-        if not data:
-            return 0
-        return stdev(data)
+        return self.variance() ** 0.5
 
 
 class Allocation(models.Model):
