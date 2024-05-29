@@ -64,7 +64,7 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(models.Score)
 class ScoreAdmin(admin.ModelAdmin):
-    list_display = ["id", "applicant", "user"]
+    list_display = ["id", "applicant", "user", "score"]
     raw_id_fields = ["applicant", "user"]
     readonly_fields = ["applicant", "user", "score", "comment", "score_history"]
 
