@@ -49,7 +49,3 @@ processes = []
     interval = "15s"
     restart_limit = 0
     timeout = "2s"
-
-[[statics]]
-  guest_path = "/code/static"
-  url_prefix = "/static/"
