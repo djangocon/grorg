@@ -9,13 +9,13 @@ set dotenv-load := false
 @fmt:
     just --fmt --unstable
 
-@pre-commit:
-    pre-commit run --all-files
+@lint *ARGS:
+    uv --quiet run --with pre-commit-uv pre-commit run {{ ARGS }} --all-files
 
 @up:
     python manage.py runserver
 
 @update:
-    pip install -U pip pip-tools
+    pip install -U pip pip-tools uv
     pip install -U -r requirements.in
     pip-compile requirements.in
