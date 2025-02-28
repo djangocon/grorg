@@ -10,6 +10,10 @@ asgiref==3.8.1
     #   django-allauth
 bumpver==2024.1130
     # via -r requirements.in
+certifi==2025.1.31
+    # via requests
+charset-normalizer==3.4.1
+    # via requests
 click==8.1.8
     # via bumpver
 colorama==0.4.6
@@ -31,6 +35,8 @@ environs[django]==14.1.1
     # via -r requirements.in
 gunicorn==23.0.0
     # via -r requirements.in
+idna==3.10
+    # via requests
 lexid==2021.1006
     # via bumpver
 marshmallow==3.26.1
@@ -43,12 +49,16 @@ psycopg2-binary==2.9.10
     # via -r requirements.in
 python-dotenv==1.0.1
     # via environs
+requests==2.32.3
+    # via -r requirements.in
 sqlparse==0.5.3
     # via django
 toml==0.10.2
     # via bumpver
 typing-extensions==4.12.2
     # via dj-database-url
+urllib3==2.3.0
+    # via requests
 urlman==2.0.2
     # via -r requirements.in
 whitenoise==6.9.0
