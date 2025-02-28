@@ -19,9 +19,7 @@ class RegisterForm(forms.Form):
         return self.cleaned_data["email"]
 
     def clean_program_code(self):
-        program = Program.objects.filter(
-            join_code=self.cleaned_data["program_code"]
-        ).first()
+        program = Program.objects.filter(join_code=self.cleaned_data["program_code"]).first()
         if not program:
             raise forms.ValidationError("Invalid code")
         return program
@@ -31,9 +29,7 @@ class JoinForm(forms.Form):
     program_code = forms.CharField(required=True)
 
     def clean_program_code(self):
-        program = Program.objects.filter(
-            join_code=self.cleaned_data["program_code"]
-        ).first()
+        program = Program.objects.filter(join_code=self.cleaned_data["program_code"]).first()
         if not program:
             raise forms.ValidationError("Invalid code")
         return program

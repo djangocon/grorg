@@ -1,19 +1,19 @@
 <form action="{{ action|default:"." }}" method="POST">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form.visible_fields %}
-        {% include "_field.html" %}
-    {% endfor %}
-    {% for field in form.hidden_fields %}
-        {{ field }}
-    {% endfor %}
-    <div class="buttons">
-        <input class="button" type="submit" value="{{ submit_verb|default:"Save" }}">
-        {% if include_delete %}
-            <input class="button serious" type="submit" name="delete" value="{{ delete_verb|default:"Delete" }}">
-        {% endif %}
-        {% if include_random %}
-            <input class="button boring" type="submit" name="random_after" accesskey="n" value="{{ random_verb|default:"Save & Next" }}">
-        {% endif %}
-    </div>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form.visible_fields %}
+    {% include "_field.html" %}
+  {% endfor %}
+  {% for field in form.hidden_fields %}
+    {{ field }}
+  {% endfor %}
+  <div class="buttons">
+    <input class="button" type="submit" value="{{ submit_verb|default:"Save" }}">
+    {% if include_delete %}
+      <input class="button serious" type="submit" name="delete" value="{{ delete_verb|default:"Delete" }}">
+    {% endif %}
+    {% if include_random %}
+      <input class="button boring" type="submit" name="random_after" accesskey="n" value="{{ random_verb|default:"Save & Next" }}">
+    {% endif %}
+  </div>
 </form>

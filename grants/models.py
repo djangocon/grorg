@@ -59,9 +59,7 @@ class Resource(models.Model):
         ("accomodation", "Accomodation"),
     ]
 
-    program = models.ForeignKey(
-        Program, related_name="resources", on_delete=models.CASCADE
-    )
+    program = models.ForeignKey(Program, related_name="resources", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     amount = models.PositiveIntegerField()
@@ -99,9 +97,7 @@ class Question(models.Model):
         ("integer", "Integer value"),
     ]
 
-    program = models.ForeignKey(
-        Program, related_name="questions", on_delete=models.CASCADE
-    )
+    program = models.ForeignKey(Program, related_name="questions", on_delete=models.CASCADE)
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     question = models.TextField()
     required = models.BooleanField(default=False)
@@ -122,9 +118,7 @@ class Applicant(models.Model):
     Someone applying for a grant.
     """
 
-    program = models.ForeignKey(
-        Program, related_name="applicants", on_delete=models.CASCADE
-    )
+    program = models.ForeignKey(Program, related_name="applicants", on_delete=models.CASCADE)
     name = models.TextField()
     email = models.EmailField()
 
@@ -166,12 +160,8 @@ class Allocation(models.Model):
     An allocation of some Resources to an Applicant.
     """
 
-    applicant = models.ForeignKey(
-        Applicant, related_name="allocations", on_delete=models.CASCADE
-    )
-    resource = models.ForeignKey(
-        Resource, related_name="allocations", on_delete=models.CASCADE
-    )
+    applicant = models.ForeignKey(Applicant, related_name="allocations", on_delete=models.CASCADE)
+    resource = models.ForeignKey(Resource, related_name="allocations", on_delete=models.CASCADE)
     amount = models.PositiveIntegerField()
 
     class Meta:
@@ -185,12 +175,8 @@ class Answer(models.Model):
     An applicant's answer to a question.
     """
 
-    applicant = models.ForeignKey(
-        Applicant, related_name="answers", on_delete=models.CASCADE
-    )
-    question = models.ForeignKey(
-        Question, related_name="answers", on_delete=models.CASCADE
-    )
+    applicant = models.ForeignKey(Applicant, related_name="answers", on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
     answer = models.TextField()
 
     class Meta:
@@ -204,15 +190,9 @@ class Score(models.Model):
     A score and optional comment on an applicant by a user.
     """
 
-    applicant = models.ForeignKey(
-        Applicant, related_name="scores", on_delete=models.CASCADE
-    )
-    user = models.ForeignKey(
-        "users.User", related_name="scores", on_delete=models.CASCADE
-    )
-    score = models.FloatField(
-        blank=True, null=True, help_text="From 1 (terrible) to 5 (excellent)"
-    )
+    applicant = models.ForeignKey(Applicant, related_name="scores", on_delete=models.CASCADE)
+    user = models.ForeignKey("users.User", related_name="scores", on_delete=models.CASCADE)
+    score = models.FloatField(blank=True, null=True, help_text="From 1 (terrible) to 5 (excellent)")
     comment = models.TextField(
         blank=True,
         null=True,

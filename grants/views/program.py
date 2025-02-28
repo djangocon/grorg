@@ -20,9 +20,7 @@ def index(request):
         request,
         "index.html",
         {
-            "accessible_programs": Program.objects.filter(
-                users__pk=request.user.pk
-            ).order_by("name"),
+            "accessible_programs": Program.objects.filter(users__pk=request.user.pk).order_by("name"),
         },
     )
 
@@ -62,9 +60,7 @@ class ProgramHome(ProgramMixin, TemplateView):
             user.num_votes = user.scores.filter(applicant__program=self.program).count()
         return {
             "num_applicants": self.program.applicants.count(),
-            "num_scored": self.request.user.scores.filter(
-                applicant__program=self.program
-            ).count(),
+            "num_scored": self.request.user.scores.filter(applicant__program=self.program).count(),
             "users": users,
         }
 
@@ -132,9 +128,7 @@ class ProgramApply(ProgramMixin, FormView):
                 "text": forms.CharField,
                 "textarea": forms.CharField,
                 "integer": forms.IntegerField,
-            }[question.type](
-                required=question.required, widget=widget, label=question.question
-            )
+            }[question.type](required=question.required, widget=widget, label=question.question)
         return type("ApplicationForm", (BaseApplyForm,), fields)
 
     def form_valid(self, form):
@@ -182,16 +176,13 @@ class ProgramApplicants(ProgramMixin, ListView):
         # but don't let a user see their own request
         applicants = list(
             self.program.applicants.exclude(
-                Q(email=self.request.user.email) |
-                Q(name=self.request.user.get_full_name())
+                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
             )
             .prefetch_related("scores")
             .order_by("-applied")
         )
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
@@ -223,16 +214,13 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
         # but don't let a user see their own request
         applicants = list(
             self.program.applicants.exclude(
-                Q(email=self.request.user.email) |
-                Q(name=self.request.user.get_full_name())
+                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
             )
             .prefetch_related("scores")
             .order_by("-applied")
         )
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
@@ -294,16 +282,13 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
 
     def get(self, request, applicant_id):
         applicant = self.program.applicants.exclude(
-            Q(email=self.request.user.email) |
-            Q(name=self.request.user.get_full_name())
+            Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
         ).get(pk=applicant_id)
         questions = list(self.program.questions.order_by("order"))
         for question in questions:
             question.answer = question.answers.filter(applicant=applicant).first()
         # See if we already scored this one
-        score = Score.objects.filter(
-            applicant=applicant, user=self.request.user
-        ).first()
+        score = Score.objects.filter(applicant=applicant, user=self.request.user).first()
         old_score = score.score if score else None
         if score:
             all_scores = Score.objects.filter(applicant=applicant)
@@ -318,11 +303,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                 new_score.user = self.request.user
                 if old_score and new_score.score != old_score:
                     new_score.score_history = ",".join(
-                        [
-                            x.strip()
-                            for x in (new_score.score_history or "").split(",")
-                            if x.strip()
-                        ]
+                        [x.strip() for x in (new_score.score_history or "").split(",") if x.strip()]
                         + ["%.1f" % old_score]
                     )
                 new_score.save()
@@ -353,9 +334,9 @@ class RandomUnscoredApplicant(ProgramMixin, View):
     def get(self, request):
         applicant = (
             self.program.applicants.exclude(
-                Q(scores__user=self.request.user) |
-                Q(email=self.request.user.email) |
-                Q(name=self.request.user.get_full_name())
+                Q(scores__user=self.request.user)
+                | Q(email=self.request.user.email)
+                | Q(name=self.request.user.get_full_name())
             )
             .order_by("?")
             .first()
