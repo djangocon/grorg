@@ -20,6 +20,6 @@ set dotenv-load := false
     python manage.py runserver
 
 @update:
-    pip install -U pip pip-tools uv
-    pip install -U -r requirements.in
-    pip-compile requirements.in
+    pip install --upgrade pip uv
+    uv pip install --upgrade -r requirements.in
+    uv pip compile requirements.in --output-file requirements.txt
