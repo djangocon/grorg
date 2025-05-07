@@ -1,8 +1,12 @@
 <div class="field">
-    <label>
-        <span>{{ field.label }} {% if field.field.required %}<span class="required">(required)</span>{% endif %}</span>
+    <label for="{{ field.id_for_label }}">
+        <span>{{ field.label }} {% if field.field.required %}<span class="required" aria-hidden="true">(required)</span>{% endif %}</span>
         {{ field }}
-        {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
-        {{ field.errors }}
+        {% if field.help_text %}<p class="help-text" id="help-{{ field.id_for_label }}">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}
+            <div class="field-errors" role="alert">
+                {{ field.errors }}
+            </div>
+        {% endif %}
     </label>
 </div>
