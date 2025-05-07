@@ -468,4 +468,23 @@ table.nice {
         font-size: 150%;
     }
 
+    footer .section {
+        text-align: center;
+    }
+
+}
+
+/* Footer */
+footer {
+    margin-top: 30px;
+    padding: 20px 0;
+    background: #f6f6f6;
+    border-top: 1px solid #ddd;
+}
+
+footer p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+    text-align: center;
 }
