@@ -10,12 +10,12 @@ from users import views as users
 
 urlpatterns = [
     path("favicon.ico", favicon),
-    path("", program.index),
+    path("", program.index, name="index"),
     path("accounts/", include("allauth.urls")),
     # path("login/", auth.views.LoginView.as_view(template_name="login.html")),
     # path("logout/", auth.views.LogoutView.as_view()),
-    path("register/", users.register),
-    path("join/", users.join),
+    path("register/", users.register, name="register"),
+    path("join/", users.join, name="join"),
     path("admin/", admin.site.urls),
     path("<str:program>/", program.ProgramHome.as_view()),
     path("<str:program>/questions/", program.ProgramQuestions.as_view()),
