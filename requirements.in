@@ -3,7 +3,7 @@ django-allauth
 Django<5.0
 environs[django]
 gunicorn
-psycopg2-binary
+psycopg[binary]
 requests
 urlman
 whitenoise
