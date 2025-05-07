@@ -22,7 +22,9 @@ SECRET_KEY = env("SECRET_KEY", default="secret")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["https://djangocon-us-grorg.fly.dev"])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS", default=["https://djangocon-us-grorg.fly.dev"]
+)
 # SESSION_COOKIE_SECURE = True
 
 TEMPLATES = [
