@@ -3,6 +3,9 @@ set dotenv-load := false
 @_default:
     just --list
 
+@console:
+    flyctl ssh console
+
 @deploy:
     flyctl deploy
 
