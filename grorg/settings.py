@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.sites",
     "django.contrib.staticfiles",
+    "django_prodserver",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
