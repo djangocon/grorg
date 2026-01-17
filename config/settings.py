@@ -17,7 +17,7 @@ env = environs.Env()
 
 BASE_DIR = environs.Path(__file__).resolve(strict=True).parent.parent
 
-SECRET_KEY = env("SECRET_KEY", default="secret")
+SECRET_KEY = env.str("SECRET_KEY", default="secret")
 
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
