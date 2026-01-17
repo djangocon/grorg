@@ -9,6 +9,7 @@ from config.views import favicon
 from users import views as users
 
 urlpatterns = [
+    path("health/", include("health_check.urls")),
     path("favicon.ico", favicon),
     path("", program.index, name="index"),
     path("accounts/", include("allauth.urls")),

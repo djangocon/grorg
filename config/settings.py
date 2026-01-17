@@ -59,6 +59,11 @@ INSTALLED_APPS = (
     "django.contrib.sites",
     "django.contrib.staticfiles",
     "django_prodserver",
+    "health_check",
+    "health_check.db",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "django_q",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -130,3 +135,16 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USERNAME_REQUIRED = False
 LOGIN_REDIRECT_URL = "/"
+
+# django-q settings
+
+Q_CLUSTER = {
+    "bulk": 10,
+    "max_attempts": 1,
+    "name": "DjangORM",
+    "orm": "default",
+    "queue_limit": 50,
+    "retry": 120,
+    "timeout": 90,
+    "workers": 2,
+}
