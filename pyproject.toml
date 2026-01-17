@@ -10,6 +10,7 @@ dependencies = [
     "django-allauth",
     "django-health-check",
     "django-q2",
+    "django-tailwind-cli",
     "django<6.0",
     "django-prodserver[gunicorn]",
     "environs[django]",

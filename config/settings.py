@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     "django.contrib.sites",
     "django.contrib.staticfiles",
     "django_prodserver",
+    "django_tailwind_cli",
     "health_check",
     "health_check.db",
     "health_check.storage",
@@ -114,7 +115,10 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "staticfiles"
-STATICFILES_DIRS = (str(BASE_DIR.joinpath("static")),)
+STATICFILES_DIRS = (
+    str(BASE_DIR.joinpath("frontend")),
+    str(BASE_DIR.joinpath("static")),
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -148,3 +152,12 @@ Q_CLUSTER = {
     "timeout": 90,
     "workers": 2,
 }
+
+# Tailwind CSS settings
+
+TAILWIND_CLI_AUTOMATIC_DOWNLOAD = env.bool("TAILWIND_CLI_AUTOMATIC_DOWNLOAD", default=True)
+TAILWIND_CLI_CONFIG_FILE = env.str("TAILWIND_CLI_CONFIG_FILE", default="tailwind.config.js")
+TAILWIND_CLI_DIST_CSS = env.str("TAILWIND_CLI_DIST_CSS", default="css/tailwind.css")
+TAILWIND_CLI_PATH = env.str("TAILWIND_CLI_PATH", default="~/.local/bin/")
+TAILWIND_CLI_SRC_CSS = env.str("TAILWIND_CLI_SRC_CSS", default="frontend/index.css")
+TAILWIND_CLI_VERSION = env.str("TAILWIND_CLI_VERSION", default="4.1.18")
