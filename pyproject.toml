@@ -1,20 +1,46 @@
+[project]
+name = "grorg"
+version = "2026.1.1"
+description = "DjangoCon US Grant Organization"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "bumpver",
+    "django-allauth",
+    "django<6.0",
+    "django-prodserver[gunicorn]",
+    "environs[django]",
+    "psycopg[binary]",
+    "pytest",
+    "pytest-django",
+    "requests",
+    "urlman",
+    "whitenoise",
+]
+
+[tool.bumpver]
+commit = true
+commit_message = ":bookmark: bump version {old_version} -> {new_version}"
+current_version = "2026.1.1"
+push = false
+tag = true
+version_pattern = "YYYY.MM.INC1"
+
+[tool.bumpver.file_patterns]
+"config/__init__.py" = [
+    '__version__ = "{version}"'
+]
+"pyproject.toml" = [
+    'version = "{version}"'
+]
+
 [tool.pytest.ini_options]
-# addopts = "--cov=. --durations=1 --nomigrations --reuse-db -vv"
-addopts = "--nomigrations --reuse-db -vv"
-DJANGO_SETTINGS_MODULE = "settings.test"
-norecursedirs = ".git config node_modules scss settings static templates"
-python_files = "test_*.py"
+DJANGO_SETTINGS_MODULE = "config.settings"
+addopts = "--nomigrations --reuse-db"
+norecursedirs = ".git* .venv staticfiles templates static"
+python_files = ["test_*.py", "tests.py"]
 
 [tool.ruff]
-# Enable Pyflakes `E` and `F` codes by default.
-select = ["E", "F"]
-ignore = ["E501", "E741"] # temporary
-
-# Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = ["A", "B", "C", "D", "E", "F"]
-unfixable = []
-
-# Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
     ".direnv",
@@ -22,37 +48,28 @@ exclude = [
     ".git",
     ".github",
     ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
     ".ruff_cache",
     ".svn",
     ".tox",
     ".venv",
     "__pypackages__",
     "_build",
-    "buck-out",
     "build",
-    "CONTRIBUTORS.md",
     "dist",
     "migrations",
     "node_modules",
-    "settings/docker.py",
     "static",
-    "venv",
 ]
-
-per-file-ignores = {}
-
-# Same as Black.
 line-length = 120
+target-version = "py313"
 
-# Allow unused variables when underscore-prefixed.
+[tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+fixable = ["A", "B", "C", "D", "E", "F"]
+ignore = ["E501", "E741"]
+per-file-ignores = {}
+select = ["E", "F"]
+unfixable = []
 
-# Assume Python 3.12
-target-version = "py312"
-
-[tool.ruff.mccabe]
-# Unlike Flake8, default to a complexity level of 10.
-max-complexity = 10
+[tool.uv]
+package = false

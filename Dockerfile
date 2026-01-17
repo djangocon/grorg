@@ -1,23 +1,56 @@
-FROM python:3.12-slim-bookworm
+# ------------------------------------------------------------
+# Stage 1: Base/builder layer - Setup Python environment
+# ------------------------------------------------------------
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Configure environment variables
+ENV UV_SYSTEM_PYTHON=1
+ENV UV_LINK_MODE=copy
 
-RUN mkdir -p /code
+# Set working directory
+WORKDIR /src/
 
-WORKDIR /code
+# Install curl for health checks
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl
 
-COPY requirements.txt /tmp/requirements.txt
+# Install Python dependencies using uv
+# Mount only the necessary files (dependency definitions)
+# This optimizes layer caching - changes to other files won't invalidate this layer
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync \
+        --all-extras \
+        --frozen \
+        --no-install-project
 
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
+# ------------------------------------------------------------
+# Stage 2: Release - Final production image
+# ------------------------------------------------------------
+FROM builder AS release
 
-COPY . /code/
+# Use SIGINT for stopping the container
+# This allows for graceful shutdown and proper cleanup
+STOPSIGNAL SIGINT
 
-RUN python manage.py collectstatic --noinput
+COPY . /src/
 
-EXPOSE 8000
+# Copy the uv cache from builder stage and compile bytecode once
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --compile
 
-CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "grorg.wsgi"]
+# Collect static files for production serving
+RUN DATABASE_URL=sqlite://:memory: SECRET_KEY=build-key uv run --frozen -m manage collectstatic --noinput
+
+CMD ["/src/start-web.sh"]
+
+# Web stage (default)
+FROM release AS web
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=40s --retries=3 \
+    CMD ["/src/healthcheck-web.sh"]
+
+CMD ["/src/start-web.sh"]

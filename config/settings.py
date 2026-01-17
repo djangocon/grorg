@@ -1,5 +1,5 @@
 """
-Django settings for grorg project.
+Django settings for config project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.sites",
     "django.contrib.staticfiles",
+    "django_prodserver",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -78,9 +79,9 @@ MIDDLEWARE = (
     "allauth.account.middleware.AccountMiddleware",
 )
 
-ROOT_URLCONF = "grorg.urls"
+ROOT_URLCONF = "config.urls"
 
-WSGI_APPLICATION = "grorg.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "users.User"
 LOGOUT_REDIRECT_URL = "/"
