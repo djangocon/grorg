@@ -1,5 +1,5 @@
 """
-WSGI config for grorg project.
+WSGI config for config project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "grorg.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 from django.core.wsgi import get_wsgi_application  # noqa
 

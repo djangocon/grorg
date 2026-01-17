@@ -5,7 +5,7 @@ from django.urls import include
 from django.urls import path
 
 from grants.views import bulk_load, program
-from grorg.views import favicon
+from config.views import favicon
 from users import views as users
 
 urlpatterns = [
