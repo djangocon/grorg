@@ -37,8 +37,8 @@ version_pattern = "YYYY.MM.INC1"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 addopts = "--nomigrations --reuse-db"
-norecursedirs = ".git* templates static"
-python_files = "test_*.py"
+norecursedirs = ".git* .venv staticfiles templates static"
+python_files = ["test_*.py", "tests.py"]
 
 [tool.ruff]
 exclude = [
