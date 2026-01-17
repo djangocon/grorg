@@ -140,6 +140,19 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USERNAME_REQUIRED = False
 LOGIN_REDIRECT_URL = "/"
 
+# django-prodserver settings
+
+PRODUCTION_PROCESSES = {
+    "web": {
+        "BACKEND": "django_prodserver.backends.gunicorn.GunicornServer",
+        "ARGS": {"bind": "0.0.0.0:8000", "workers": "2"},
+    },
+    "worker": {
+        "BACKEND": "django_prodserver.backends.django_q2.DjangoQ2Worker",
+        "ARGS": {},
+    },
+}
+
 # django-q settings
 
 Q_CLUSTER = {
