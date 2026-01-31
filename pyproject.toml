@@ -1,6 +1,6 @@
 [project]
 name = "grorg"
-version = "2026.1.21"
+version = "2026.1.22"
 description = "DjangoCon US Grant Organization"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -26,7 +26,7 @@ dependencies = [
 [tool.bumpver]
 commit = true
 commit_message = ":bookmark: bump version {old_version} -> {new_version}"
-current_version = "2026.1.21"
+current_version = "2026.1.22"
 push = false
 tag = true
 version_pattern = "YYYY.MM.INC1"
