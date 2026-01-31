@@ -37,10 +37,10 @@ class ProgramMixin:
     def dispatch(self, *args, **kwargs):
         self.program_slug = kwargs.pop("program")
         self.program = Program.objects.get(slug=self.program_slug)
-        if self.login_required and not self.request.user:
-            return redirect("login")
+        if self.login_required and not self.request.user.is_authenticated:
+            return redirect("account_login")
         if self.login_required and not self.program.user_allowed(self.request.user):
-            raise Http404("Not logged in")
+            raise Http404("You don't have access to this program")
         return super().dispatch(*args, **kwargs)
 
     def render_to_response(self, context, **kwargs):
