@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from urlman import Urls
 
@@ -211,7 +212,10 @@ class Score(models.Model):
         "users.User", related_name="scores", on_delete=models.CASCADE
     )
     score = models.FloatField(
-        blank=True, null=True, help_text="From 1 (terrible) to 5 (excellent)"
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="From 1 (terrible) to 5 (excellent)",
     )
     comment = models.TextField(
         blank=True,
@@ -223,6 +227,13 @@ class Score(models.Model):
     class Meta:
         unique_together = [
             ("applicant", "user"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(score__isnull=True)
+                | (models.Q(score__gte=1) & models.Q(score__lte=5)),
+                name="score_range_1_to_5",
+            ),
         ]
 
     def score_history_human(self):

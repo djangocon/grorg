@@ -66,6 +66,12 @@ class ScoreForm(forms.ModelForm):
         fields = ["score", "comment"]
         model = Score
 
+    def clean_score(self):
+        score = self.cleaned_data.get("score")
+        if score is not None and (score < 1 or score > 5):
+            raise forms.ValidationError("Score must be between 1 and 5.")
+        return score
+
 
 class ResourceForm(forms.ModelForm):
     class Meta:
