@@ -10,12 +10,13 @@ ENV UV_LINK_MODE=copy
 # Set working directory
 WORKDIR /src/
 
-# Install curl for health checks and procps for pgrep
+# Install curl/wget for health checks and procps for pgrep
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    procps
+    procps \
+    wget
 
 # Install Python dependencies using uv
 # Mount only the necessary files (dependency definitions)
