@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 
-{% block whole_title %}Join{% endblock %}
+{% block whole_title %}Join a Program{% endblock %}
 
 {% block content %}
-    <div class="section">
-        <div class="main-column">
-            <h2>Join</h2>
-            <form action="." method="POST">
-                {% include "_form.html" with submit_verb="Join" %}
-            </form>
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Join a Program</h2>
+            <p class="text-gray-600 mb-6 text-center">Enter the program code you received to join a grant program.</p>
+            {% include "_form.html" with submit_verb="Join" %}
         </div>
     </div>
 {% endblock %}

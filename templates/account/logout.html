@@ -1,22 +1,25 @@
-{% extends "account/base.html" %}
+{% extends "base.html" %}
 
 {% load i18n %}
 
 {% block title %}Log Out{% endblock %}
 
 {% block content %}
-    <h2>Log Out</h2>
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Log Out</h2>
+            <p class="text-gray-600 mb-6">Are you sure you want to log out?</p>
 
-    <p>Are you sure you want to log out?</p>
+            <form method="POST" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    Yes, Log Out
+                </button>
+            </form>
 
-    <form method="POST" action="{% url 'account_logout' %}">
-        {% csrf_token %}
-        <div class="buttons">
-            <input class="button serious" type="submit" value="Log Out">
+            <p class="mt-4">
+                <a href="{% url 'index' %}" class="text-blue-600 hover:text-blue-800 text-sm">Back to Home</a>
+            </p>
         </div>
-    </form>
-
-    <p class="login-links">
-        <a href="{% url 'index' %}">Back to Home</a>
-    </p>
+    </div>
 {% endblock %}

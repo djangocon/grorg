@@ -3,37 +3,39 @@
 {% block title %}Resources - {{ program }}{% endblock %}
 
 {% block content %}
-    <div class="section">
-        <div class="main-column">
-            <h1>Resources</h1>
-
-            <table class="nice">
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
-                </tr>
-                {% for resource in resources %}
+    <div class="max-w-4xl">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <td>{{ resource.name }}</td>
-                        <td>{{ resource.get_type_display }}</td>
-                        <td>{{ resource.amount }}</td>
-                        <td>
-                            <a href="{{ resource.urls.edit }}" class="button">Edit</a>
-                        </td>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="3" class="empty">No resources set.</td>
-                    </tr>
-                {% endfor %}
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for resource in resources %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ resource.name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ resource.get_type_display }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ resource.amount }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ resource.urls.edit }}" class="text-blue-600 hover:text-blue-900 text-sm font-medium">Edit</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500 italic">No resources defined yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
+        </div>
 
-            <h3>Create a new resource</h3>
-            <form action="." method="POST">
-                {% include "_form.html" %}
-            </form>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Resource</h3>
+            {% include "_form.html" with submit_verb="Add Resource" %}
         </div>
     </div>
 {% endblock %}

@@ -3,12 +3,14 @@
 {% block whole_title %}Register{% endblock %}
 
 {% block content %}
-    <section class="section">
-        <div class="main-column">
-            <h2>Register</h2>
-            <form action="." method="POST">
-                {% include "_form.html" with submit_verb="Register" %}
-            </form>
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Create an Account</h2>
+            {% include "_form.html" with submit_verb="Register" %}
+            <p class="mt-6 text-center text-sm text-gray-600">
+                Already have an account?
+                <a href="{% url 'account_login' %}" class="text-blue-600 hover:text-blue-800 font-medium">Log in</a>
+            </p>
         </div>
-    </section>
+    </div>
 {% endblock %}

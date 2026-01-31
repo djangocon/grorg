@@ -1,19 +1,29 @@
-<form action="{{ action|default:"." }}" method="POST">
+<form action="{{ action|default:'.' }}" method="POST" class="space-y-4">
     {% csrf_token %}
-    {{ form.non_field_errors }}
+    {% if form.non_field_errors %}
+        <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
     {% for field in form.visible_fields %}
         {% include "_field.html" %}
     {% endfor %}
     {% for field in form.hidden_fields %}
         {{ field }}
     {% endfor %}
-    <div class="buttons">
-        <input class="button" type="submit" value="{{ submit_verb|default:"Save" }}" aria-label="{{ submit_verb|default:"Save" }}">
+    <div class="flex flex-wrap gap-3 pt-4">
+        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            {{ submit_verb|default:"Save" }}
+        </button>
         {% if include_delete %}
-            <input class="button serious" type="submit" name="delete" value="{{ delete_verb|default:"Delete" }}" aria-label="{{ delete_verb|default:"Delete" }}">
+            <button type="submit" name="delete" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                {{ delete_verb|default:"Delete" }}
+            </button>
         {% endif %}
         {% if include_random %}
-            <input class="button boring" type="submit" name="random_after" accesskey="n" value="{{ random_verb|default:"Save & Next" }}" aria-label="{{ random_verb|default:"Save and go to next item" }}">
+            <button type="submit" name="random_after" accesskey="n" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                {{ random_verb|default:"Save & Next" }}
+            </button>
         {% endif %}
     </div>
 </form>

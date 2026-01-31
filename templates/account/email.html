@@ -1,63 +1,75 @@
-{% extends "account/base.html" %}
+{% extends "base.html" %}
 
 {% load i18n %}
 
 {% block title %}Email Addresses{% endblock %}
 
 {% block content %}
-    <h2>Email Addresses</h2>
+    <div class="max-w-xl mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Email Addresses</h2>
 
-    {% if emailaddresses %}
-        <p>The following email addresses are associated with your account:</p>
+            {% if emailaddresses %}
+                <p class="text-gray-600 mb-4">The following email addresses are associated with your account:</p>
 
-        <ul class="real">
-            {% for emailaddress in emailaddresses %}
-                <li>
-                    {{ emailaddress.email }}
-                    {% if emailaddress.verified %}
-                        <span class="verified">(verified)</span>
-                    {% else %}
-                        <span class="unverified">(unverified)</span>
-                    {% endif %}
-                    {% if emailaddress.primary %}
-                        <span class="primary">(primary)</span>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+                <div class="space-y-2 mb-6">
+                    {% for emailaddress in emailaddresses %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+                            <span class="font-medium text-gray-900">{{ emailaddress.email }}</span>
+                            <div class="flex gap-2">
+                                {% if emailaddress.verified %}
+                                    <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Verified</span>
+                                {% else %}
+                                    <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Unverified</span>
+                                {% endif %}
+                                {% if emailaddress.primary %}
+                                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">Primary</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
 
-        <form method="POST" action="{% url 'account_email' %}">
-            {% csrf_token %}
-            <select name="email">
-                {% for emailaddress in emailaddresses %}
-                    <option value="{{ emailaddress.email }}">{{ emailaddress.email }}</option>
+                <form method="POST" action="{% url 'account_email' %}" class="mb-8">
+                    {% csrf_token %}
+                    <select name="email" class="w-full p-2 border border-gray-300 rounded-md mb-3">
+                        {% for emailaddress in emailaddresses %}
+                            <option value="{{ emailaddress.email }}">{{ emailaddress.email }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="submit" name="action_primary" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors">
+                            Make Primary
+                        </button>
+                        <button type="submit" name="action_send" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition-colors">
+                            Re-send Verification
+                        </button>
+                        <button type="submit" name="action_remove" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors">
+                            Remove
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <p class="text-gray-500 italic mb-6">No email addresses are associated with your account.</p>
+            {% endif %}
+
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 pt-4 border-t border-gray-200">Add Email Address</h3>
+
+            {% if form.errors %}
+                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'account_email' %}" class="space-y-4">
+                {% csrf_token %}
+                {% for field in form.visible_fields %}
+                    {% include "_field.html" %}
                 {% endfor %}
-            </select>
-            <div class="buttons">
-                <button class="button" type="submit" name="action_primary">Make Primary</button>
-                <button class="button" type="submit" name="action_send">Re-send Verification</button>
-                <button class="button serious" type="submit" name="action_remove">Remove</button>
-            </div>
-        </form>
-    {% else %}
-        <p>No email addresses are associated with your account.</p>
-    {% endif %}
-
-    <h3>Add Email Address</h3>
-
-    {% if form.errors %}
-        <div class="errors">
-            {{ form.non_field_errors }}
+                <button type="submit" name="action_add" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors">
+                    Add Email
+                </button>
+            </form>
         </div>
-    {% endif %}
-
-    <form method="POST" action="{% url 'account_email' %}">
-        {% csrf_token %}
-        {% for field in form.visible_fields %}
-            {% include "_field.html" %}
-        {% endfor %}
-        <div class="buttons">
-            <input class="button" type="submit" name="action_add" value="Add Email">
-        </div>
-    </form>
+    </div>
 {% endblock %}

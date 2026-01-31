@@ -3,60 +3,84 @@
 {% block title %}{{ applicant.name }} - {{ program }}{% endblock %}
 
 {% block content %}
-    <div class="section">
-        <div class="main-column">
-            <h1>{{ applicant.name }}</h1>
+    <div class="grid gap-6 lg:grid-cols-3">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Applicant Info Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ applicant.name }}</h1>
 
-            <h4>Email address</h4>
-            <p>{{ applicant.email }}</p>
+                <div class="grid gap-4 sm:grid-cols-2 mb-6">
+                    <div>
+                        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Email</h4>
+                        <p class="text-gray-900">{{ applicant.email }}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Applied</h4>
+                        <p class="text-gray-900">{{ applicant.applied|date:"j M Y, P" }}</p>
+                    </div>
+                </div>
 
-            <h4>Application time</h4>
-            <p>{{ applicant.applied|date:"j M Y P" }}</p>
+                {% for question in questions %}
+                    <div class="border-t border-gray-100 pt-4 mt-4">
+                        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{{ question.question }}</h4>
+                        {% if question.answer %}
+                            <p class="text-gray-900 whitespace-pre-line">{{ question.answer.answer }}</p>
+                        {% else %}
+                            <p class="text-gray-400 italic">Not answered</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
 
-            {% for question in questions %}
-                <h4>{{ question.question }}</h4>
-                {% if question.answer %}
-                    <p>
-                        {{ question.answer.answer|linebreaksbr }}
+            <!-- Scores Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Scores</h3>
+
+                {% if not all_scores %}
+                    <p class="text-gray-500 italic p-4 bg-gray-50 rounded-md">
+                        You must score this applicant before you can see other scores.
                     </p>
                 {% else %}
-                    <p class="empty">
-                        Not answered.
-                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                {% for ascore in all_scores %}
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm text-gray-900">{{ ascore.user }}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                {{ ascore.score|floatformat:"1" }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-600">
+                                            {{ ascore.comment }}
+                                            {% if ascore.score_history %}
+                                                <p class="text-xs text-gray-400 mt-1">History: {{ ascore.score_history_human }}</p>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 {% endif %}
-            {% endfor %}
+            </div>
+        </div>
 
-            <h3>Scores</h3>
-            {% if not all_scores %}
-                <p class="empty">
-                    You must score this applicant before you can see other scores.
-                </p>
-            {% else %}
-                <table class="nice">
-                    <tr>
-                        <th>User</th>
-                        <th>Score</th>
-                        <th>Comment</th>
-                    </tr>
-                    {% for ascore in all_scores %}
-                        <tr>
-                            <td>{{ ascore.user }}</td>
-                            <td>{{ ascore.score|floatformat:"1" }}</td>
-                            <td>
-                                {{ ascore.comment }}
-                                {% if ascore.score_history %}
-                                    <p class="score_history">Score history: {{ ascore.score_history_human }}</p>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% endif %}
-
-            <h3>Submit score</h3>
-            <form action="." method="POST">
+        <!-- Sidebar - Score Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Submit Score</h3>
                 {% include "_form.html" with submit_verb="Save" include_random=1 %}
-            </form>
+            </div>
         </div>
     </div>
 {% endblock %}

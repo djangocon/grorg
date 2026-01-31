@@ -61,5 +61,11 @@ services:
     ports:
       - "8000:8000"
 
+  tailwind:
+    <<: *common-settings
+    command: ["uv", "run", "-m", "manage", "tailwind", "--skip-checks", "watch"]
+    depends_on: []
+    init: true
+
 volumes:
   postgres-data:
