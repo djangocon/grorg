@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django import forms
 
-from .models import Allocation, Question, Resource, Score
+from .models import Allocation, Program, Question, Resource, Score
 
 
 class QuestionForm(forms.ModelForm):
@@ -96,3 +96,15 @@ class AllocationForm(forms.ModelForm):
                 "That resource is already allocated. Delete it if you wish to change it."
             )
         return resource
+
+
+class ProgramForm(forms.ModelForm):
+    class Meta:
+        model = Program
+        fields = ["name", "slug"]
+
+    def clean_slug(self):
+        slug = self.cleaned_data["slug"]
+        if Program.objects.filter(slug=slug).exists():
+            raise forms.ValidationError("A program with this slug already exists.")
+        return slug

@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
-from ..forms import AllocationForm, BaseApplyForm, QuestionForm, ResourceForm, ScoreForm
+from ..forms import AllocationForm, BaseApplyForm, ProgramForm, QuestionForm, ResourceForm, ScoreForm
 from ..models import Answer, Applicant, Program, Question, Resource, Score
 
 
@@ -25,6 +25,27 @@ def index(request):
             ).order_by("name"),
         },
     )
+
+
+class CreateProgram(FormView):
+    """
+    Allows staff users to create a new program.
+    """
+
+    template_name = "program-create.html"
+    form_class = ProgramForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("account_login")
+        if not request.user.is_staff:
+            raise Http404("Staff access required")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        program = form.save()
+        program.users.add(self.request.user)
+        return redirect(program.urls.view)
 
 
 class ProgramMixin:

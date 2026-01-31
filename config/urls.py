@@ -18,6 +18,7 @@ urlpatterns = [
     path("register/", users.register, name="register"),
     path("join/", users.join, name="join"),
     path("admin/", admin.site.urls),
+    path("programs/create/", program.CreateProgram.as_view(), name="create_program"),
     path("<str:program>/", program.ProgramHome.as_view()),
     path("<str:program>/questions/", program.ProgramQuestions.as_view()),
     path(

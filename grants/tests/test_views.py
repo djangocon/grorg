@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from model_bakery import baker
 
-from grants.models import Applicant, Question, Score
+from grants.models import Applicant, Program, Question, Score
 
 
 class TestIndexView:
@@ -114,3 +114,46 @@ class TestProgramResourcesView:
         response = client_logged_in.get(f"/{program.slug}/resources/")
         assert response.status_code == 200
         assert resource.name in response.content.decode()
+
+
+class TestCreateProgramView:
+    def test_requires_authentication(self, client, db):
+        response = client.get("/programs/create/")
+        assert response.status_code == 302
+        assert "login" in response.url
+
+    def test_requires_staff_access(self, client, user):
+        client.force_login(user)
+        response = client.get("/programs/create/")
+        assert response.status_code == 404
+
+    def test_accessible_to_staff(self, client, user):
+        user.is_staff = True
+        user.save()
+        client.force_login(user)
+        response = client.get("/programs/create/")
+        assert response.status_code == 200
+
+    def test_creates_program(self, client, user):
+        user.is_staff = True
+        user.save()
+        client.force_login(user)
+        response = client.post(
+            "/programs/create/",
+            {"name": "New Conference", "slug": "new-conference"},
+        )
+        assert response.status_code == 302
+        program = Program.objects.get(slug="new-conference")
+        assert program.name == "New Conference"
+        assert user in program.users.all()
+
+    def test_rejects_duplicate_slug(self, client, user, program):
+        user.is_staff = True
+        user.save()
+        client.force_login(user)
+        response = client.post(
+            "/programs/create/",
+            {"name": "Another Program", "slug": program.slug},
+        )
+        assert response.status_code == 200  # Form re-displayed with errors
+        assert Program.objects.filter(slug=program.slug).count() == 1
