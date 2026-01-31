@@ -182,6 +182,6 @@ TAILWIND_CLI_CONFIG_FILE = env.str(
     "TAILWIND_CLI_CONFIG_FILE", default="tailwind.config.js"
 )
 TAILWIND_CLI_DIST_CSS = env.str("TAILWIND_CLI_DIST_CSS", default="css/tailwind.css")
-TAILWIND_CLI_PATH = env.str("TAILWIND_CLI_PATH", default="~/.local/bin/")
+TAILWIND_CLI_PATH = str(environs.Path(env.str("TAILWIND_CLI_PATH", default="~/.local/bin/")).expanduser())
 TAILWIND_CLI_SRC_CSS = env.str("TAILWIND_CLI_SRC_CSS", default="frontend/index.css")
 TAILWIND_CLI_VERSION = env.str("TAILWIND_CLI_VERSION", default="4.1.18")

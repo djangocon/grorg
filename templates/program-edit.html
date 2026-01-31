@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Program - {{ program }}{% endblock %}
+
+{% block content %}
+    <div class="max-w-2xl">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Program</h1>
+            <form action="." method="POST">
+                {% include "_form.html" with submit_verb="Save Changes" %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

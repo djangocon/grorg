@@ -31,6 +31,7 @@ class Program(models.Model):
 
     class urls(Urls):
         view = "/{self.slug}/"
+        edit = "{view}edit/"
         questions = "{view}questions/"
         applicants = "{view}applicants/"
         applicants_bulk = "{view}applicants/bulk/"

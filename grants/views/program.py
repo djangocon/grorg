@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
-from ..forms import AllocationForm, BaseApplyForm, ProgramForm, QuestionForm, ResourceForm, ScoreForm
+from ..forms import AllocationForm, BaseApplyForm, ProgramEditForm, ProgramForm, QuestionForm, ResourceForm, ScoreForm
 from ..models import Answer, Applicant, Program, Question, Resource, Score
 
 
@@ -88,6 +88,31 @@ class ProgramHome(ProgramMixin, TemplateView):
             ).count(),
             "users": users,
         }
+
+
+class EditProgram(ProgramMixin, UpdateView):
+    """
+    Allows staff users to edit program settings.
+    """
+
+    template_name = "program-edit.html"
+    form_class = ProgramEditForm
+    model = Program
+
+    def dispatch(self, *args, **kwargs):
+        result = super().dispatch(*args, **kwargs)
+        # If we got a redirect (e.g., to login), return it
+        if hasattr(result, "status_code") and result.status_code in (301, 302):
+            return result
+        if not self.request.user.is_staff:
+            raise Http404("Staff access required")
+        return result
+
+    def get_object(self):
+        return self.program
+
+    def get_success_url(self):
+        return self.program.urls.view
 
 
 class ProgramQuestions(ProgramMixin, FormView):

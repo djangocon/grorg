@@ -159,7 +159,7 @@ class TestCreateProgramView:
         new_program = Program.objects.exclude(pk=program.pk).get()
         assert new_program.slug == f"{program.slug}-1"
 
-    def test_auto_generates_join_code(self, client, user):
+    def test_join_code_defaults_to_slug(self, client, user):
         user.is_staff = True
         user.save()
         client.force_login(user)
@@ -168,5 +168,51 @@ class TestCreateProgramView:
             {"name": "Conference With Code"},
         )
         program = Program.objects.get(slug="conference-with-code")
-        assert program.join_code is not None
-        assert len(program.join_code) == 8
+        assert program.join_code == "conference-with-code"
+
+
+class TestEditProgramView:
+    def test_requires_authentication(self, client, program):
+        response = client.get(f"/{program.slug}/edit/")
+        assert response.status_code == 302
+        assert "login" in response.url
+
+    def test_requires_staff_access(self, client, program, user):
+        program.users.add(user)
+        client.force_login(user)
+        response = client.get(f"/{program.slug}/edit/")
+        assert response.status_code == 404
+
+    def test_accessible_to_staff(self, client, program, user):
+        user.is_staff = True
+        user.save()
+        program.users.add(user)
+        client.force_login(user)
+        response = client.get(f"/{program.slug}/edit/")
+        assert response.status_code == 200
+
+    def test_can_update_program_name(self, client, program, user):
+        user.is_staff = True
+        user.save()
+        program.users.add(user)
+        client.force_login(user)
+        response = client.post(
+            f"/{program.slug}/edit/",
+            {"name": "Updated Name", "join_code": program.join_code or program.slug},
+        )
+        assert response.status_code == 302
+        program.refresh_from_db()
+        assert program.name == "Updated Name"
+
+    def test_can_update_join_code(self, client, program, user):
+        user.is_staff = True
+        user.save()
+        program.users.add(user)
+        client.force_login(user)
+        response = client.post(
+            f"/{program.slug}/edit/",
+            {"name": program.name, "join_code": "new-secret-code"},
+        )
+        assert response.status_code == 302
+        program.refresh_from_db()
+        assert program.join_code == "new-secret-code"

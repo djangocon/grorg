@@ -20,6 +20,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("programs/create/", program.CreateProgram.as_view(), name="create_program"),
     path("<str:program>/", program.ProgramHome.as_view()),
+    path("<str:program>/edit/", program.EditProgram.as_view(), name="edit_program"),
     path("<str:program>/questions/", program.ProgramQuestions.as_view()),
     path(
         "<str:program>/questions/<str:question_id>/",
