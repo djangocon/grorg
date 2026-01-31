@@ -7,8 +7,8 @@
         <h2 class="text-3xl font-bold text-gray-900 mb-4">Welcome to Grorg</h2>
         <p class="text-lg text-gray-600 mb-6">
             This is the semi-experimental system to help manage grant applications.
-            Please report problems in <a href="https://github.com/djangocon/grorg/issues" class="text-blue-600 hover:text-blue-800 underline">GitHub Issues</a>
-            or ask questions in <a href="https://github.com/djangocon/grorg/discussions" class="text-blue-600 hover:text-blue-800 underline">GitHub Discussions</a>.
+            Please report problems in <a href="https://github.com/djangocon/grorg/issues" class="text-emerald-600 hover:text-emerald-800 underline">GitHub Issues</a>
+            or ask questions in <a href="https://github.com/djangocon/grorg/discussions" class="text-emerald-600 hover:text-emerald-800 underline">GitHub Discussions</a>.
         </p>
 
         {% if user.is_authenticated %}
@@ -16,13 +16,13 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-900">Your Programs</h3>
                     {% if user.is_staff %}
-                        <a href="{% url 'create_program' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors">
+                        <a href="{% url 'create_program' %}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors">
                             <i class="fas fa-plus mr-2"></i> Create Program
                         </a>
                     {% endif %}
                 </div>
                 {% for program in accessible_programs %}
-                    <a href="{{ program.urls.view }}" class="block p-4 mb-2 bg-gray-50 hover:bg-blue-50 rounded-md border border-gray-200 hover:border-blue-300 transition-colors">
+                    <a href="{{ program.urls.view }}" class="block p-4 mb-2 bg-gray-50 hover:bg-emerald-50 rounded-md border border-gray-200 hover:border-emerald-300 transition-colors">
                         <span class="font-medium text-gray-900">{{ program.name }}</span>
                     </a>
                 {% empty %}
@@ -32,7 +32,7 @@
         {% endif %}
 
         <p class="text-sm text-gray-500">
-            Cheers to <a href="https://twitter.com/andrewgodwin" class="text-blue-600 hover:text-blue-800 underline">Andrew Godwin</a> for developing grorg.
+            Cheers to <a href="https://twitter.com/andrewgodwin" class="text-emerald-600 hover:text-emerald-800 underline">Andrew Godwin</a> for developing grorg.
         </p>
     </div>
 {% endblock content %}

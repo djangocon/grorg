@@ -17,14 +17,14 @@
 
                 <form method="POST" action="{% url 'account_confirm_email' confirmation.key %}">
                     {% csrf_token %}
-                    <button type="submit" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                         Confirm
                     </button>
                 </form>
             {% else %}
                 <div class="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
                     <p class="mb-2">This email confirmation link has expired or is invalid.</p>
-                    <a href="{% url 'account_email' %}" class="text-blue-600 hover:text-blue-800 font-medium">Request a new confirmation email</a>
+                    <a href="{% url 'account_email' %}" class="text-emerald-600 hover:text-emerald-800 font-medium">Request a new confirmation email</a>
                 </div>
             {% endif %}
         </div>
