@@ -176,3 +176,7 @@ cython_debug/
 # django(isms)
 staticfiles
 CLAUDE.md
+
+# Database dumps
+*.dump
+*.db
