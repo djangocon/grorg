@@ -1,0 +1,63 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block title %}Email Addresses{% endblock %}
+
+{% block content %}
+    <h2>Email Addresses</h2>
+
+    {% if emailaddresses %}
+        <p>The following email addresses are associated with your account:</p>
+
+        <ul class="real">
+            {% for emailaddress in emailaddresses %}
+                <li>
+                    {{ emailaddress.email }}
+                    {% if emailaddress.verified %}
+                        <span class="verified">(verified)</span>
+                    {% else %}
+                        <span class="unverified">(unverified)</span>
+                    {% endif %}
+                    {% if emailaddress.primary %}
+                        <span class="primary">(primary)</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <form method="POST" action="{% url 'account_email' %}">
+            {% csrf_token %}
+            <select name="email">
+                {% for emailaddress in emailaddresses %}
+                    <option value="{{ emailaddress.email }}">{{ emailaddress.email }}</option>
+                {% endfor %}
+            </select>
+            <div class="buttons">
+                <button class="button" type="submit" name="action_primary">Make Primary</button>
+                <button class="button" type="submit" name="action_send">Re-send Verification</button>
+                <button class="button serious" type="submit" name="action_remove">Remove</button>
+            </div>
+        </form>
+    {% else %}
+        <p>No email addresses are associated with your account.</p>
+    {% endif %}
+
+    <h3>Add Email Address</h3>
+
+    {% if form.errors %}
+        <div class="errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'account_email' %}">
+        {% csrf_token %}
+        {% for field in form.visible_fields %}
+            {% include "_field.html" %}
+        {% endfor %}
+        <div class="buttons">
+            <input class="button" type="submit" name="action_add" value="Add Email">
+        </div>
+    </form>
+{% endblock %}
