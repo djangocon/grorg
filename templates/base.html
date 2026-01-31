@@ -36,16 +36,19 @@
             </nav>
         </header>
 
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
         {% block content-wrapper %}
             <main class="content">
+                {% if messages %}
+                    <section class="section">
+                        <div class="main-column">
+                            <ul class="messages">
+                                {% for message in messages %}
+                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </section>
+                {% endif %}
                 {% if program %}
                     <section class="section program-header">
                         {% if user_allowed_program %}
