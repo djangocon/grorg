@@ -3,50 +3,53 @@
 {% block title %}Questions - {{ program }}{% endblock %}
 
 {% block content %}
-    <div class="section">
-        <div class="main-column">
-            <h1>Questions</h1>
-
-            <table class="nice">
-                <tr>
-                    <th>Question</th>
-                    <th>Type</th>
-                    <th>Required</th>
-                    <th>Actions</th>
-                </tr>
-                <tr>
-                    <td>Name</td>
-                    <td>Text</td>
-                    <td><i class="fa fa-check green"></i></td>
-                    <td class="empty">Built in</td>
-                </tr>
-                <tr>
-                    <td>Email</td>
-                    <td>Email</td>
-                    <td><i class="fa fa-check green"></i></td>
-                    <td class="empty">Built in</td>
-                </tr>
-                {% for question in questions %}
+    <div class="max-w-4xl">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <td>{{ question.question }}</td>
-                        <td>{{ question.get_type_display }}</td>
-                        <td>
-                            {% if question.required %}
-                                <i class="fa fa-check green"></i>
-                            {% else %}
-                                <i class="fa fa-times red"></i>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ question.urls.edit }}" class="button">Edit</a>
-                        </td>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Required</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                {% endfor %}
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr class="bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">Name</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">Text</td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-600"></i></td>
+                        <td class="px-6 py-4 text-right text-sm text-gray-400 italic">Built-in</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">Email</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">Email</td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-600"></i></td>
+                        <td class="px-6 py-4 text-right text-sm text-gray-400 italic">Built-in</td>
+                    </tr>
+                    {% for question in questions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ question.question }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ question.get_type_display }}</td>
+                            <td class="px-6 py-4 text-center">
+                                {% if question.required %}
+                                    <i class="fas fa-check text-green-600"></i>
+                                {% else %}
+                                    <i class="fas fa-xmark text-gray-400"></i>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ question.urls.edit }}" class="text-blue-600 hover:text-blue-900 text-sm font-medium">Edit</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
-            <h3>Create a new question</h3>
-            <form action="." method="POST">
-                {% include "_form.html" %}
-            </form>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Question</h3>
+            {% include "_form.html" with submit_verb="Add Question" %}
         </div>
     </div>
 {% endblock %}

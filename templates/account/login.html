@@ -1,38 +1,46 @@
-{% extends "account/base.html" %}
+{% extends "base.html" %}
 
 {% load i18n socialaccount %}
 
 {% block title %}Login{% endblock %}
 
 {% block content %}
-    <h2>Login</h2>
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Log In</h2>
 
-    {% if form.errors %}
-        <div class="errors">
-            {{ form.non_field_errors }}
+            {% if form.errors %}
+                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'account_login' %}" class="space-y-4">
+                {% csrf_token %}
+                {% for field in form.visible_fields %}
+                    {% include "_field.html" %}
+                {% endfor %}
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Log In
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-4 flex justify-between text-sm">
+                <a href="{% url 'account_reset_password' %}" class="text-blue-600 hover:text-blue-800">Forgot Password?</a>
+                <a href="{% url 'register' %}" class="text-blue-600 hover:text-blue-800">Register</a>
+            </div>
+
+            {% get_providers as socialaccount_providers %}
+            {% if socialaccount_providers %}
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <a href="{% provider_login_url 'github' %}" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-md transition-colors">
+                        <i class="fab fa-github"></i>
+                        Log in with GitHub
+                    </a>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
-
-    <form method="POST" action="{% url 'account_login' %}">
-        {% csrf_token %}
-        {% for field in form.visible_fields %}
-            {% include "_field.html" %}
-        {% endfor %}
-        <div class="buttons">
-            <input class="button" type="submit" value="Login">
-        </div>
-    </form>
-
-    <p class="login-links">
-        <a href="{% url 'account_reset_password' %}">Forgot Password?</a>
-        <a href="{% url 'register' %}">Register New Account</a>
-    </p>
-
-    {% get_providers as socialaccount_providers %}
-    {% if socialaccount_providers %}
-        <hr>
-        <p>
-            <a class="button" href="{% provider_login_url 'github' %}">Login with GitHub</a>
-        </p>
-    {% endif %}
+    </div>
 {% endblock %}

@@ -2,50 +2,81 @@
 
 {% block title %}{{ program }}{% endblock %}
 
-{% block body_class %}program-home{% endblock %}
-
 {% block content %}
-    <div class="section">
-        <div class="main-column">
-            <h3>Applicants</h3>
-            <p>
-                <b>{{ num_applicants }}</b> application{{ num_applicants|pluralize }} received,
-                of which you have scored <b>{{ num_scored }}</b>.
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Applicants Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-users text-blue-600"></i>
+                Applicants
+            </h3>
+            <p class="text-gray-600 mb-4">
+                <span class="text-2xl font-bold text-gray-900">{{ num_applicants }}</span>
+                application{{ num_applicants|pluralize }} received
             </p>
-            <p>
-                <a href="{{ program.urls.applicants }}" class="button boring">View applicants</a>
+            <p class="text-sm text-gray-500 mb-4">
+                You have scored <span class="font-semibold text-gray-700">{{ num_scored }}</span> of them.
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ program.urls.applicants }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                    View All
+                </a>
                 {% if num_scored < num_applicants %}
-                    <a href="{{ program.urls.score_random }}" class="button">Score random applicant</a>
+                    <a href="{{ program.urls.score_random }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors text-sm">
+                        Score Random
+                    </a>
                 {% endif %}
-            </p>
+            </div>
+        </div>
 
-            <h3>Resources</h3>
-            <p>
-                {% for resource in program.resources.all %}
-                    <i class="fa fa-{{ resource.fa_icon }}"></i> <b>{{ resource }}</b>:
-                    {{ resource.amount_allocated }} allocated, {{ resource.amount_remaining }} remaining <br>
-                {% empty %}
-                    <span class="empty">No resources defined.</span>
-                {% endfor %}
-            </p>
-            <p>
-                <a href="{{ program.urls.resources }}" class="button boring">View resources</a>
-            </p>
+        <!-- Resources Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-box text-green-600"></i>
+                Resources
+            </h3>
+            {% for resource in program.resources.all %}
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <span class="flex items-center gap-2 text-gray-700">
+                        <i class="fa fa-{{ resource.fa_icon }} text-gray-400"></i>
+                        {{ resource }}
+                    </span>
+                    <span class="text-sm">
+                        <span class="text-green-600 font-medium">{{ resource.amount_allocated }}</span> /
+                        <span class="text-gray-500">{{ resource.amount_remaining }} left</span>
+                    </span>
+                </div>
+            {% empty %}
+                <p class="text-gray-500 italic text-sm">No resources defined.</p>
+            {% endfor %}
+            <div class="mt-4">
+                <a href="{{ program.urls.resources }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                    Manage Resources
+                </a>
+            </div>
+        </div>
 
-            <h3>Users</h3>
-            <p>The following users are assigned to this program:</p>
-            <ul class="real">
+        <!-- Users Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-user-group text-purple-600"></i>
+                Users
+            </h3>
+            <ul class="space-y-2 mb-4">
                 {% for user in users %}
-                    <li>{{ user }} ({{ user.num_votes }} vote{{ user.num_votes|pluralize }})</li>
+                    <li class="flex items-center justify-between text-sm">
+                        <span class="text-gray-700">{{ user }}</span>
+                        <span class="text-gray-500">{{ user.num_votes }} vote{{ user.num_votes|pluralize }}</span>
+                    </li>
                 {% empty %}
-                    <li class="empty">No users assigned</li>
+                    <li class="text-gray-500 italic text-sm">No users assigned</li>
                 {% endfor %}
             </ul>
-            <p>
-                Other users can sign up using the program code, which is
-                <tt>{{ program.join_code }}</tt>. Only give this code to people
-                you trust; anyone with it can sign up and see voting results.
-            </p>
+            <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                <p class="text-xs text-gray-500 mb-1">Program Code</p>
+                <code class="text-sm font-mono bg-white px-2 py-1 rounded border border-gray-200">{{ program.join_code }}</code>
+                <p class="text-xs text-gray-400 mt-2">Share with trusted reviewers only.</p>
+            </div>
         </div>
     </div>
 {% endblock %}

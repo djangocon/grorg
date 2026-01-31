@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
-
-{% block content-wrapper %}
-    <div class="section">
-        <div class="main-column">
-            {% block content %}
-            {% endblock content %}
+{% block content %}
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            {% block account_content %}
+            {% endblock account_content %}
         </div>
     </div>
-{% endblock content-wrapper %}
+{% endblock content %}
