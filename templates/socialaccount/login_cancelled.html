@@ -1,0 +1,15 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block title %}Login Cancelled{% endblock %}
+
+{% block content %}
+    <h2>Login Cancelled</h2>
+
+    <p>You cancelled the login process. No worries, you can try again whenever you're ready.</p>
+
+    <p class="login-links">
+        <a href="{% url 'account_login' %}">Back to Login</a>
+    </p>
+{% endblock %}

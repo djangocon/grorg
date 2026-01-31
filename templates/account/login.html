@@ -1,0 +1,38 @@
+{% extends "account/base.html" %}
+
+{% load i18n socialaccount %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <h2>Login</h2>
+
+    {% if form.errors %}
+        <div class="errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+        {% for field in form.visible_fields %}
+            {% include "_field.html" %}
+        {% endfor %}
+        <div class="buttons">
+            <input class="button" type="submit" value="Login">
+        </div>
+    </form>
+
+    <p class="login-links">
+        <a href="{% url 'account_reset_password' %}">Forgot Password?</a>
+        <a href="{% url 'register' %}">Register New Account</a>
+    </p>
+
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+        <hr>
+        <p>
+            <a class="button" href="{% provider_login_url 'github' %}">Login with GitHub</a>
+        </p>
+    {% endif %}
+{% endblock %}
