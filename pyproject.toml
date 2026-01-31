@@ -15,6 +15,7 @@ dependencies = [
     "django-prodserver[gunicorn]",
     "environs[django]",
     "psycopg[binary]",
+    "model-bakery",
     "pytest",
     "pytest-django",
     "requests",
