@@ -34,6 +34,7 @@ class Program(models.Model):
         questions = "{view}questions/"
         applicants = "{view}applicants/"
         applicants_bulk = "{view}applicants/bulk/"
+        applicants_bulk_speaker = "{view}applicants/bulk-speaker/"
         applicants_csv = "{view}applicants/csv/"
         scores_bulk = "{view}applicants/bulk_scores/"
         resources = "{view}resources/"
@@ -130,6 +131,7 @@ class Applicant(models.Model):
     email = models.EmailField()
 
     applied = models.DateTimeField(blank=True, null=True)
+    applied_to_speak = models.BooleanField(default=False)
 
     class urls(Urls):
         view = "{self.program.urls.applicants}{self.id}/"

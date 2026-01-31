@@ -3,71 +3,103 @@
 {% block title %}Applicants - {{ program }}{% endblock %}
 
 {% block content %}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="?sort=applied" class="hover:text-gray-900">
-                                Applied {% if sort == "applied" %}<i class="fa fa-chevron-down text-blue-600"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="?sort=score" class="hover:text-gray-900">
-                                Score {% if sort == "score" %}<i class="fa fa-chevron-down text-blue-600"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for applicant in applicants %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ applicant.name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ applicant.email }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ applicant.applied|date:"j M Y" }}</td>
-                            {% if applicant.has_scored %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="font-medium text-gray-900">{{ applicant.average_score|floatformat:"1"|default:"-" }}</span>
-                                    <span class="text-gray-400 text-xs">({{ applicant.scores.count }}, σ={{ applicant.stdev|floatformat:"1" }})</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {% for allocation in applicant.allocations.all %}
-                                        <span class="inline-flex items-center gap-1 mr-2">
-                                            <i class="fa fa-{{ allocation.resource.fa_icon }} text-gray-400"></i>
-                                            {{ allocation.amount }}
-                                        </span>
-                                    {% empty %}
-                                        <span class="text-gray-400 italic">None</span>
-                                    {% endfor %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
-                                    <a href="{{ applicant.urls.view }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
-                                    <a href="{{ applicant.urls.allocations }}" class="text-blue-600 hover:text-blue-900 font-medium">Allocate</a>
-                                </td>
-                            {% else %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Hidden</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Hidden</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ applicant.urls.view }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
-                                        Score
-                                    </a>
-                                </td>
-                            {% endif %}
-                        </tr>
-                    {% empty %}
+    <form method="post" action="{{ program.urls.applicants_bulk_speaker }}" id="bulk-speaker-form">
+        {% csrf_token %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-gray-500 italic">No applicants yet.</td>
+                            {% if user.is_staff %}
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                </th>
+                            {% endif %}
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?sort=applied" class="hover:text-gray-900">
+                                    Applied {% if sort == "applied" %}<i class="fa fa-chevron-down text-blue-600"></i>{% endif %}
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="?sort=score" class="hover:text-gray-900">
+                                    Score {% if sort == "score" %}<i class="fa fa-chevron-down text-blue-600"></i>{% endif %}
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for applicant in applicants %}
+                            <tr class="hover:bg-gray-50">
+                                {% if user.is_staff %}
+                                    <td class="px-4 py-4 whitespace-nowrap">
+                                        <input type="checkbox" name="applicant_ids" value="{{ applicant.id }}" class="applicant-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    </td>
+                                {% endif %}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ applicant.name }}
+                                    {% if user.is_staff and applicant.applied_to_speak %}
+                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                            <i class="fas fa-microphone mr-1"></i> Speaker
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ applicant.email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ applicant.applied|date:"j M Y" }}</td>
+                                {% if applicant.has_scored %}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="font-medium text-gray-900">{{ applicant.average_score|floatformat:"1"|default:"-" }}</span>
+                                        <span class="text-gray-400 text-xs">({{ applicant.scores.count }}, σ={{ applicant.stdev|floatformat:"1" }})</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {% for allocation in applicant.allocations.all %}
+                                            <span class="inline-flex items-center gap-1 mr-2">
+                                                <i class="fa fa-{{ allocation.resource.fa_icon }} text-gray-400"></i>
+                                                {{ allocation.amount }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-gray-400 italic">None</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                                        <a href="{{ applicant.urls.view }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
+                                        <a href="{{ applicant.urls.allocations }}" class="text-blue-600 hover:text-blue-900 font-medium">Allocate</a>
+                                    </td>
+                                {% else %}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Hidden</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Hidden</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                        <a href="{{ applicant.urls.view }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                                            Score
+                                        </a>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="{% if user.is_staff %}7{% else %}6{% endif %}" class="px-6 py-8 text-center text-gray-500 italic">No applicants yet.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+
+        {% if user.is_staff %}
+            <div class="mt-4 flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <span class="text-sm font-medium text-gray-700">With selected:</span>
+                <button type="submit" name="action" value="mark_speaker" class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors">
+                    <i class="fas fa-microphone mr-2"></i> Mark as Speaker
+                </button>
+                <button type="submit" name="action" value="unmark_speaker" class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
+                    <i class="fas fa-times mr-2"></i> Unmark as Speaker
+                </button>
+            </div>
+        {% endif %}
+    </form>
 
     <div class="mt-6 flex flex-wrap gap-3">
         <a href="{{ program.urls.applicants_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
@@ -80,4 +112,13 @@
             <i class="fas fa-download mr-2"></i> Export as CSV
         </a>
     </div>
+
+    {% if user.is_staff %}
+        <script>
+            document.getElementById('select-all').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.applicant-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+            });
+        </script>
+    {% endif %}
 {% endblock %}

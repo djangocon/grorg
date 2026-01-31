@@ -246,10 +246,11 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
 
         writer = csv.writer(response)
         questions = self.program.questions.order_by("order")
-        headers = ["Email", "Name", "Has Scored", "Average Score"] + [
-            question.question for question in questions.only("question")
-        ]
-        writer.writerow(headers)  # Write headers
+        headers = ["Email", "Name", "Has Scored", "Average Score"]
+        if self.request.user.is_staff:
+            headers.append("Applied to Speak")
+        headers += [question.question for question in questions.only("question")]
+        writer.writerow(headers)
 
         for applicant in applicants:
             row = [
@@ -258,6 +259,8 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
                 applicant.has_scored,
                 applicant.average_score,
             ]
+            if self.request.user.is_staff:
+                row.append(applicant.applied_to_speak)
             questions = self.program.questions.order_by("order")
             for question in questions:
                 try:
@@ -441,3 +444,28 @@ class ProgramResourceEdit(ProgramMixin, UpdateView):
             Resource.objects.filter(pk=resource_id).delete()
             return redirect(self.program.urls.resources)
         return UpdateView.post(self, request, resource_id)
+
+
+class BulkUpdateSpeakerStatus(ProgramMixin, View):
+    """
+    Allows staff users to bulk update applied_to_speak status for applicants.
+    """
+
+    def dispatch(self, *args, **kwargs):
+        result = super().dispatch(*args, **kwargs)
+        if hasattr(self, "request") and not self.request.user.is_staff:
+            raise Http404("Staff access required")
+        return result
+
+    def post(self, request):
+        applicant_ids = request.POST.getlist("applicant_ids")
+        action = request.POST.get("action")
+
+        if applicant_ids and action in ("mark_speaker", "unmark_speaker"):
+            new_status = action == "mark_speaker"
+            Applicant.objects.filter(
+                program=self.program,
+                pk__in=applicant_ids,
+            ).update(applied_to_speak=new_status)
+
+        return redirect(self.program.urls.applicants)

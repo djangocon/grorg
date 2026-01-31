@@ -29,6 +29,10 @@ urlpatterns = [
     path("<str:program>/applicants/", program.ProgramApplicants.as_view()),
     path("<str:program>/applicants/bulk/", bulk_load.BulkLoadApplicants.as_view()),
     path(
+        "<str:program>/applicants/bulk-speaker/",
+        program.BulkUpdateSpeakerStatus.as_view(),
+    ),
+    path(
         "<str:program>/applicants/bulk_scores/",
         bulk_load.BulkLoadScores.as_view(),
     ),
