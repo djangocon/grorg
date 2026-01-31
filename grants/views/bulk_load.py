@@ -23,6 +23,10 @@ class BulkLoader(ProgramMixin):
             "form": BulkLoadUploadForm(),
         }
 
+    def before_import(self, rows, target_map):
+        """Hook called before processing rows. Override in subclasses."""
+        pass
+
     def post(self, request):
         # If there's a CSV, load it into the database, otherwise retrieve
         # the one we stored there before.
@@ -64,6 +68,7 @@ class BulkLoader(ProgramMixin):
                 for name, value in form.cleaned_data.items()
                 if name != "csv_id" and value
             }
+            self.before_import(rows, target_map)
             for i, row in enumerate(rows[1:]):
                 try:
                     with atomic():
@@ -116,7 +121,19 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
             )
         return targets
 
+    def before_import(self, rows, target_map):
+        """Initialize tracking for duplicate emails within this import."""
+        self._imported_emails = set()
+
     def process_row(self, row, target_map):
+        email = row[target_map["email"]].strip().lower()
+
+        # Check for duplicate email within this import
+        if not self.program.duplicate_emails and email in self._imported_emails:
+            raise ValueError(
+                f"Duplicate email '{email}' - this email already appeared earlier in the CSV"
+            )
+        self._imported_emails.add(email)
         if self.program.duplicate_emails:
             applicant = None
         else:
