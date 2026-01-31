@@ -180,3 +180,6 @@ CLAUDE.md
 # Database dumps
 *.dump
 *.db
+
+# Tailwind CSS build output
+frontend/css/

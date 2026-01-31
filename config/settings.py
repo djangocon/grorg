@@ -139,8 +139,8 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USERNAME_REQUIRED = False
 LOGIN_REDIRECT_URL = "/"
@@ -175,8 +175,12 @@ Q_CLUSTER = {
 
 # Tailwind CSS settings
 
-TAILWIND_CLI_AUTOMATIC_DOWNLOAD = env.bool("TAILWIND_CLI_AUTOMATIC_DOWNLOAD", default=True)
-TAILWIND_CLI_CONFIG_FILE = env.str("TAILWIND_CLI_CONFIG_FILE", default="tailwind.config.js")
+TAILWIND_CLI_AUTOMATIC_DOWNLOAD = env.bool(
+    "TAILWIND_CLI_AUTOMATIC_DOWNLOAD", default=True
+)
+TAILWIND_CLI_CONFIG_FILE = env.str(
+    "TAILWIND_CLI_CONFIG_FILE", default="tailwind.config.js"
+)
 TAILWIND_CLI_DIST_CSS = env.str("TAILWIND_CLI_DIST_CSS", default="css/tailwind.css")
 TAILWIND_CLI_PATH = env.str("TAILWIND_CLI_PATH", default="~/.local/bin/")
 TAILWIND_CLI_SRC_CSS = env.str("TAILWIND_CLI_SRC_CSS", default="frontend/index.css")
