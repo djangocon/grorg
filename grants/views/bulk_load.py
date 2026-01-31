@@ -136,7 +136,7 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
         if not applicant.email.strip():
             raise ValueError("Email is blank")
         # Parse datetime if present
-        if target_map.get("timestamp", None):
+        if "timestamp" in target_map:
             for time_format in self.time_formats:
                 try:
                     applicant.applied = datetime.datetime.strptime(
