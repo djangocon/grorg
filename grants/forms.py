@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.utils.text import slugify
 
 from .models import Allocation, Program, Question, Resource, Score
 
@@ -101,10 +102,17 @@ class AllocationForm(forms.ModelForm):
 class ProgramForm(forms.ModelForm):
     class Meta:
         model = Program
-        fields = ["name", "slug"]
+        fields = ["name"]
 
-    def clean_slug(self):
-        slug = self.cleaned_data["slug"]
-        if Program.objects.filter(slug=slug).exists():
-            raise forms.ValidationError("A program with this slug already exists.")
-        return slug
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        base_slug = slugify(instance.name)
+        slug = base_slug
+        counter = 1
+        while Program.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        instance.slug = slug
+        if commit:
+            instance.save()
+        return instance

@@ -134,26 +134,27 @@ class TestCreateProgramView:
         response = client.get("/programs/create/")
         assert response.status_code == 200
 
-    def test_creates_program(self, client, user):
+    def test_creates_program_with_auto_slug(self, client, user):
         user.is_staff = True
         user.save()
         client.force_login(user)
         response = client.post(
             "/programs/create/",
-            {"name": "New Conference", "slug": "new-conference"},
+            {"name": "New Conference"},
         )
         assert response.status_code == 302
         program = Program.objects.get(slug="new-conference")
         assert program.name == "New Conference"
         assert user in program.users.all()
 
-    def test_rejects_duplicate_slug(self, client, user, program):
+    def test_auto_increments_duplicate_slug(self, client, user, program):
         user.is_staff = True
         user.save()
         client.force_login(user)
         response = client.post(
             "/programs/create/",
-            {"name": "Another Program", "slug": program.slug},
+            {"name": program.name},
         )
-        assert response.status_code == 200  # Form re-displayed with errors
-        assert Program.objects.filter(slug=program.slug).count() == 1
+        assert response.status_code == 302
+        new_program = Program.objects.exclude(pk=program.pk).get()
+        assert new_program.slug == f"{program.slug}-1"
