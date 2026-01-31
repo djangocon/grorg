@@ -158,3 +158,15 @@ class TestCreateProgramView:
         assert response.status_code == 302
         new_program = Program.objects.exclude(pk=program.pk).get()
         assert new_program.slug == f"{program.slug}-1"
+
+    def test_auto_generates_join_code(self, client, user):
+        user.is_staff = True
+        user.save()
+        client.force_login(user)
+        client.post(
+            "/programs/create/",
+            {"name": "Conference With Code"},
+        )
+        program = Program.objects.get(slug="conference-with-code")
+        assert program.join_code is not None
+        assert len(program.join_code) == 8

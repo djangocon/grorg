@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import secrets
+import string
+
 from django import forms
 from django.utils.text import slugify
 
 from .models import Allocation, Program, Question, Resource, Score
+
+
+def generate_join_code():
+    """Generate a random 8-character alphanumeric join code."""
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(8))
 
 
 class QuestionForm(forms.ModelForm):
@@ -106,6 +115,7 @@ class ProgramForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        # Auto-generate slug from name
         base_slug = slugify(instance.name)
         slug = base_slug
         counter = 1
@@ -113,6 +123,9 @@ class ProgramForm(forms.ModelForm):
             slug = f"{base_slug}-{counter}"
             counter += 1
         instance.slug = slug
+        # Auto-generate join code
+        if not instance.join_code:
+            instance.join_code = generate_join_code()
         if commit:
             instance.save()
         return instance
