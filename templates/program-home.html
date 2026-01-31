@@ -11,7 +11,7 @@
         </a>
     </div>
     {% endif %}
-    <div class="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="bg-gray-100 rounded-lg border border-gray-200 p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 mb-1">Invite Reviewers</h3>
@@ -20,7 +20,7 @@
             <div class="flex items-center gap-3">
                 <div class="flex items-center bg-white rounded-lg border border-gray-300 overflow-hidden">
                     <code id="join-code" class="px-4 py-2 text-lg font-mono font-bold text-gray-900">{{ program.join_code|default:program.slug }}</code>
-                    <button onclick="copyCode()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy code">
+                    <button onclick="copyCode()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy join link">
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
@@ -37,7 +37,8 @@
     <script>
         function copyCode() {
             const code = document.getElementById('join-code').textContent;
-            navigator.clipboard.writeText(code).then(() => {
+            const joinUrl = window.location.origin + '/join/?code=' + encodeURIComponent(code);
+            navigator.clipboard.writeText(joinUrl).then(() => {
                 const btn = event.target.closest('button');
                 const icon = btn.querySelector('i');
                 icon.className = 'fas fa-check';

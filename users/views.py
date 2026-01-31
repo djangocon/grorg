@@ -43,7 +43,11 @@ def register(request):
             )
             return redirect("/")
     else:
-        form = RegisterForm()
+        # Pre-fill code from query parameter if provided
+        initial = {}
+        if code := request.GET.get("code"):
+            initial["program_code"] = code
+        form = RegisterForm(initial=initial)
     return render(request, "register.html", {"form": form})
 
 
@@ -58,5 +62,9 @@ def join(request):
             program.save()
             return redirect("/")
     else:
-        form = JoinForm()
+        # Pre-fill code from query parameter if provided
+        initial = {}
+        if code := request.GET.get("code"):
+            initial["program_code"] = code
+        form = JoinForm(initial=initial)
     return render(request, "join.html", {"form": form})
