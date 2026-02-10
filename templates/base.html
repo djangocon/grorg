@@ -34,6 +34,11 @@
                             <a href="{% url 'join' %}" class="text-gray-300 hover:text-white transition-colors">
                                 Join Program
                             </a>
+                            {% if user.is_superuser %}
+                                <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white transition-colors">
+                                    Admin
+                                </a>
+                            {% endif %}
                             <a href="{% url 'account_logout' %}" class="text-gray-300 hover:text-white transition-colors">
                                 Log Out
                             </a>
