@@ -63,7 +63,7 @@ services:
 
   tailwind:
     <<: *common-settings
-    command: ["uv", "run", "-m", "manage", "tailwind", "--skip-checks", "watch"]
+    command: ["/src/start-tailwind.sh"]
     depends_on: []
     init: true
 
