@@ -20,8 +20,11 @@
             <div class="flex items-center gap-3">
                 <div class="flex items-center bg-white rounded-lg border border-gray-300 overflow-hidden">
                     <code id="join-code" class="px-4 py-2 text-lg font-mono font-bold text-gray-900">{{ program.join_code|default:program.slug }}</code>
-                    <button onclick="copyCode()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy join link">
+                    <button onclick="copyCode()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy code">
                         <i class="fas fa-copy"></i>
+                    </button>
+                    <button onclick="copyLink()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy join link">
+                        <i class="fas fa-link"></i>
                     </button>
                 </div>
             </div>
@@ -35,15 +38,21 @@
         </div>
     </div>
     <script>
+        function copyToClipboard(text, btn, originalIcon) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.querySelector('i');
+                icon.className = 'fas fa-check text-green-600';
+                setTimeout(() => { icon.className = originalIcon; }, 2000);
+            });
+        }
         function copyCode() {
             const code = document.getElementById('join-code').textContent;
+            copyToClipboard(code, event.target.closest('button'), 'fas fa-copy');
+        }
+        function copyLink() {
+            const code = document.getElementById('join-code').textContent;
             const joinUrl = window.location.origin + '/join/?code=' + encodeURIComponent(code);
-            navigator.clipboard.writeText(joinUrl).then(() => {
-                const btn = event.target.closest('button');
-                const icon = btn.querySelector('i');
-                icon.className = 'fas fa-check';
-                setTimeout(() => { icon.className = 'fas fa-copy'; }, 2000);
-            });
+            copyToClipboard(joinUrl, event.target.closest('button'), 'fas fa-link');
         }
     </script>
 
