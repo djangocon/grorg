@@ -65,15 +65,13 @@ exclude = [
     "node_modules",
     "static",
 ]
-line-length = 120
-target-version = "py313"
-
-[tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["A", "B", "C", "D", "E", "F"]
 ignore = ["E501", "E741"]
+line-length = 120
 per-file-ignores = {}
 select = ["E", "F"]
+target-version = "py311"
 unfixable = []
 
 [tool.uv]

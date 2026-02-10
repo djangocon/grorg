@@ -6,20 +6,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('grants', '0013_alter_uploadedcsv_csv'),
+        ("grants", "0013_alter_uploadedcsv_csv"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='score',
-            name='score',
-            field=models.FloatField(blank=True, help_text='From 1 (terrible) to 5 (excellent)', null=True, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(5)]),
+            model_name="score",
+            name="score",
+            field=models.FloatField(
+                blank=True,
+                help_text="From 1 (terrible) to 5 (excellent)",
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(1),
+                    django.core.validators.MaxValueValidator(5),
+                ],
+            ),
         ),
         migrations.AddConstraint(
-            model_name='score',
-            constraint=models.CheckConstraint(condition=models.Q(('score__isnull', True), models.Q(('score__gte', 1), ('score__lte', 5)), _connector='OR'), name='score_range_1_to_5'),
+            model_name="score",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("score__isnull", True),
+                    models.Q(("score__gte", 1), ("score__lte", 5)),
+                    _connector="OR",
+                ),
+                name="score_range_1_to_5",
+            ),
         ),
     ]

@@ -11,7 +11,15 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
-from ..forms import AllocationForm, BaseApplyForm, ProgramEditForm, ProgramForm, QuestionForm, ResourceForm, ScoreForm
+from ..forms import (
+    AllocationForm,
+    BaseApplyForm,
+    ProgramEditForm,
+    ProgramForm,
+    QuestionForm,
+    ResourceForm,
+    ScoreForm,
+)
 from ..models import Answer, Applicant, Program, Question, Resource, Score
 
 

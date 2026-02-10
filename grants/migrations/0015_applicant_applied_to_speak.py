@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('grants', '0014_alter_score_score_score_score_range_1_to_5'),
+        ("grants", "0014_alter_score_score_score_score_range_1_to_5"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicant',
-            name='applied_to_speak',
+            model_name="applicant",
+            name="applied_to_speak",
             field=models.BooleanField(default=False),
         ),
     ]
