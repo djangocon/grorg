@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
 
-from grants.views import bulk_load, program
+from config import __version__
 from config.views import favicon
+from grants.views import bulk_load, program
 from users import views as users
+
+admin_header = f"Grorg v{__version__}"
+admin.site.enable_nav_sidebar = False
+admin.site.site_header = admin_header
+admin.site.site_title = admin_header
 
 urlpatterns = [
     path("health/", include("health_check.urls")),
@@ -17,7 +24,7 @@ urlpatterns = [
     # path("logout/", auth.views.LogoutView.as_view()),
     path("register/", users.register, name="register"),
     path("join/", users.join, name="join"),
-    path("admin/", admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path("programs/create/", program.CreateProgram.as_view(), name="create_program"),
     path("<str:program>/", program.ProgramHome.as_view()),
     path("<str:program>/edit/", program.EditProgram.as_view(), name="edit_program"),

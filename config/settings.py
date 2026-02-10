@@ -45,6 +45,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "config.context_processors.version",
             ],
             "debug": DEBUG,
         },
@@ -126,6 +127,8 @@ STATICFILES_DIRS = (
 )
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+ADMIN_URL = env.str("ADMIN_URL", default="django-admin/")
 
 SITE_ID = 1
 
