@@ -44,6 +44,7 @@ class Program(models.Model):
         applicants_bulk = "{view}applicants/bulk/"
         applicants_bulk_speaker = "{view}applicants/bulk-speaker/"
         applicants_bulk_reject = "{view}applicants/bulk-reject/"
+        applicants_bulk_approve = "{view}applicants/bulk-approve/"
         applicants_csv = "{view}applicants/csv/"
         scores_bulk = "{view}applicants/bulk_scores/"
         resources = "{view}resources/"

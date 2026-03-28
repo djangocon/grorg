@@ -122,6 +122,10 @@ class RejectApplicantForm(forms.Form):
     )
 
 
+class ApproveApplicantForm(forms.Form):
+    pass
+
+
 class ProgramEditForm(forms.ModelForm):
     class Meta:
         model = Program

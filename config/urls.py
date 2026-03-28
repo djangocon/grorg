@@ -46,6 +46,10 @@ urlpatterns = [
         program.BulkRejectApplicants.as_view(),
     ),
     path(
+        "<str:program>/applicants/bulk-approve/",
+        program.BulkApproveApplicants.as_view(),
+    ),
+    path(
         "<str:program>/applicants/bulk_scores/",
         bulk_load.BulkLoadScores.as_view(),
     ),

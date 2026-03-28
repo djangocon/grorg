@@ -11,26 +11,28 @@
             </a>
         </div>
     {% endif %}
-    <div class="bg-gray-100 rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="bg-emerald-50 rounded-lg border-2 border-emerald-300 p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h3 class="text-sm font-medium text-gray-900 mb-1">Invite Reviewers</h3>
-                <p class="text-xs text-gray-600">Share this code with trusted reviewers to grant them access.</p>
+                <h3 class="text-lg font-semibold text-emerald-900 mb-1">
+                    <i class="fas fa-user-plus mr-2 text-emerald-600"></i>Invite Reviewers
+                </h3>
+                <p class="text-sm text-emerald-700">Share this code with trusted reviewers to grant them access to this program.</p>
             </div>
             <div class="flex items-center gap-3">
-                <div class="flex items-center bg-white rounded-lg border border-gray-300 overflow-hidden">
-                    <code id="join-code" class="px-4 py-2 text-lg font-mono font-bold text-gray-900">{{ program.join_code|default:program.slug }}</code>
-                    <button onclick="copyCode()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 border-l border-gray-300 transition-colors" title="Copy to clipboard">
+                <div class="flex items-center bg-white rounded-lg border-2 border-emerald-400 overflow-hidden shadow-sm">
+                    <code id="join-code" class="px-4 py-2.5 text-xl font-mono font-bold text-emerald-900">{{ program.join_code|default:program.slug }}</code>
+                    <button onclick="copyCode()" class="px-4 py-2.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border-l-2 border-emerald-400 transition-colors" title="Copy to clipboard">
                         <i class="fas fa-clipboard"></i>
                     </button>
                 </div>
             </div>
         </div>
-        <div class="mt-3 pt-3 border-t border-gray-200">
-            <p class="text-xs text-gray-500">
+        <div class="mt-3 pt-3 border-t border-emerald-200">
+            <p class="text-sm text-emerald-700">
                 <i class="fas fa-link mr-1"></i>
-                Reviewers can join at: <a href="/join/" class="font-medium underline hover:text-gray-700">/join/</a>
-                or register at: <a href="/register/" class="font-medium underline hover:text-gray-700">/register/</a>
+                Reviewers can join at: <a href="/join/" class="font-semibold underline hover:text-emerald-900">/join/</a>
+                or register at: <a href="/register/" class="font-semibold underline hover:text-emerald-900">/register/</a>
             </p>
         </div>
     </div>

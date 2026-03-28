@@ -13,6 +13,7 @@ from django.views.generic import FormView, ListView, TemplateView, UpdateView, V
 
 from ..forms import (
     AllocationForm,
+    ApproveApplicantForm,
     BaseApplyForm,
     ProgramEditForm,
     ProgramForm,
@@ -245,6 +246,21 @@ class ProgramApplicants(ProgramMixin, ListView):
             qs = qs.filter(status="rejected")
         else:
             qs = qs.exclude(status="rejected")
+
+        # Boolean question filters (managers only)
+        self.boolean_questions = list(self.program.questions.filter(type="boolean").order_by("order"))
+        self.active_filters = {}
+        if can_manage:
+            for bq in self.boolean_questions:
+                filter_val = self.request.GET.get(f"q{bq.id}")
+                if filter_val in ("yes", "no"):
+                    self.active_filters[bq.id] = filter_val
+                    answer_value = "True" if filter_val == "yes" else "False"
+                    matching_applicant_ids = Answer.objects.filter(question=bq, answer=answer_value).values_list(
+                        "applicant_id", flat=True
+                    )
+                    qs = qs.filter(pk__in=matching_applicant_ids)
+
         applicants = list(qs.prefetch_related("scores").order_by("-applied"))
         for applicant in applicants:
             applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
@@ -260,6 +276,21 @@ class ProgramApplicants(ProgramMixin, ListView):
         context = super().get_context_data()
         context["sort"] = self.sort
         context["viewing_rejected"] = self.viewing_rejected
+        # Build filter URLs for boolean questions
+        base_params = {k: v for k, v in self.request.GET.items()}
+        for bq in self.boolean_questions:
+            bq.active_filter = self.active_filters.get(bq.id, "")
+            param_key = f"q{bq.id}"
+            # URL for "yes" filter
+            yes_params = {k: v for k, v in base_params.items() if k != param_key}
+            yes_params[param_key] = "yes"
+            bq.filter_url_yes = "?" + "&".join(f"{k}={v}" for k, v in yes_params.items())
+            # URL for "no" filter
+            no_params = {k: v for k, v in base_params.items() if k != param_key}
+            no_params[param_key] = "no"
+            bq.filter_url_no = "?" + "&".join(f"{k}={v}" for k, v in no_params.items())
+        context["boolean_questions"] = self.boolean_questions
+        context["active_filters"] = self.active_filters
         return context
 
 
@@ -367,8 +398,13 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
             all_scores = None
         can_manage = self.program.user_can_manage(request.user)
         reject_form = RejectApplicantForm() if can_manage else None
+        approve_form = ApproveApplicantForm() if can_manage else None
         if request.method == "POST":
-            if "reject" in request.POST and can_manage:
+            if "approve" in request.POST and can_manage:
+                applicant.status = "accepted"
+                applicant.save()
+                return redirect(self.program.urls.applicants)
+            elif "reject" in request.POST and can_manage:
                 reject_form = RejectApplicantForm(request.POST)
                 if reject_form.is_valid():
                     applicant.status = "rejected"
@@ -400,6 +436,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                 "all_scores": all_scores,
                 "form": form,
                 "reject_form": reject_form,
+                "approve_form": approve_form,
             }
         )
 
@@ -556,4 +593,27 @@ class BulkRejectApplicants(ProgramMixin, View):
 
         if action == "restore_pending":
             return redirect(self.program.urls.applicants + "?status=rejected")
+        return redirect(self.program.urls.applicants)
+
+
+class BulkApproveApplicants(ProgramMixin, View):
+    """
+    Allows superusers and program creators to bulk approve applicants.
+    """
+
+    def dispatch(self, *args, **kwargs):
+        result = super().dispatch(*args, **kwargs)
+        if hasattr(self, "request") and not self.program.user_can_manage(self.request.user):
+            raise Http404("Access denied")
+        return result
+
+    def post(self, request):
+        applicant_ids = request.POST.getlist("applicant_ids")
+
+        if applicant_ids:
+            Applicant.objects.filter(
+                program=self.program,
+                pk__in=applicant_ids,
+            ).update(status="accepted")
+
         return redirect(self.program.urls.applicants)
