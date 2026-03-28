@@ -88,12 +88,17 @@ class ProgramHome(ProgramMixin, TemplateView):
     template_name = "program-home.html"
 
     def get_context_data(self):
+        active_applicants = self.program.applicants.exclude(status="rejected")
         users = list(self.program.users.all())
         for user in users:
-            user.num_votes = user.scores.filter(applicant__program=self.program).count()
+            user.num_votes = user.scores.filter(
+                applicant__program=self.program, applicant__status__in=["pending", "accepted"]
+            ).count()
         return {
-            "num_applicants": self.program.applicants.count(),
-            "num_scored": self.request.user.scores.filter(applicant__program=self.program).count(),
+            "num_applicants": active_applicants.count(),
+            "num_scored": self.request.user.scores.filter(
+                applicant__program=self.program, applicant__status__in=["pending", "accepted"]
+            ).count(),
             "users": users,
         }
 
@@ -230,16 +235,17 @@ class ProgramApplicants(ProgramMixin, ListView):
             self.sort = "score"
         else:
             self.sort = "applied"
-        # Fetch applicants
-        # but don't let a user see their own request
-        # and exclude rejected applicants from the review queue
-        applicants = list(
-            self.program.applicants.exclude(
-                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name()) | Q(status="rejected")
-            )
-            .prefetch_related("scores")
-            .order_by("-applied")
+        # Managers can view rejected applicants via ?status=rejected
+        can_manage = self.program.user_can_manage(self.request.user)
+        self.viewing_rejected = can_manage and self.request.GET.get("status") == "rejected"
+        qs = self.program.applicants.exclude(
+            Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
         )
+        if self.viewing_rejected:
+            qs = qs.filter(status="rejected")
+        else:
+            qs = qs.exclude(status="rejected")
+        applicants = list(qs.prefetch_related("scores").order_by("-applied"))
         for applicant in applicants:
             applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
@@ -253,6 +259,7 @@ class ProgramApplicants(ProgramMixin, ListView):
     def get_context_data(self):
         context = super().get_context_data()
         context["sort"] = self.sort
+        context["viewing_rejected"] = self.viewing_rejected
         return context
 
 
@@ -271,9 +278,10 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
             self.sort = "applied"
         # Fetch applicants
         # but don't let a user see their own request
+        # and exclude rejected applicants
         applicants = list(
             self.program.applicants.exclude(
-                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
+                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name()) | Q(status="rejected")
             )
             .prefetch_related("scores")
             .order_by("-applied")
@@ -537,11 +545,15 @@ class BulkRejectApplicants(ProgramMixin, View):
 
     def post(self, request):
         applicant_ids = request.POST.getlist("applicant_ids")
+        action = request.POST.get("action", "reject")
 
         if applicant_ids:
+            new_status = "pending" if action == "restore_pending" else "rejected"
             Applicant.objects.filter(
                 program=self.program,
                 pk__in=applicant_ids,
-            ).update(status="rejected")
+            ).update(status=new_status)
 
+        if action == "restore_pending":
+            return redirect(self.program.urls.applicants + "?status=rejected")
         return redirect(self.program.urls.applicants)

@@ -1,8 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Applicants - {{ program }}{% endblock %}
+{% block title %}{% if viewing_rejected %}Rejected {% endif %}Applicants - {{ program }}{% endblock %}
 
 {% block content %}
+    {% if user_can_manage %}
+        <div class="mb-4 flex items-center gap-2">
+            {% if viewing_rejected %}
+                <a href="{{ program.urls.applicants }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Active Applicants
+                </a>
+                <span class="text-sm text-red-600 font-medium"><i class="fas fa-ban mr-1"></i> Viewing Rejected Applicants</span>
+            {% else %}
+                <a href="{{ program.urls.applicants }}?status=rejected" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50">
+                    <i class="fas fa-ban mr-2"></i> View Rejected
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <form method="post" id="bulk-action-form">
         {% csrf_token %}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -18,12 +33,12 @@
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <a href="?sort=applied" class="hover:text-gray-900">
+                                <a href="?sort=applied{% if viewing_rejected %}&status=rejected{% endif %}" class="hover:text-gray-900">
                                     Applied {% if sort == "applied" %}<i class="fa fa-chevron-down text-emerald-600"></i>{% endif %}
                                 </a>
                             </th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <a href="?sort=score" class="hover:text-gray-900">
+                                <a href="?sort=score{% if viewing_rejected %}&status=rejected{% endif %}" class="hover:text-gray-900">
                                     Score {% if sort == "score" %}<i class="fa fa-chevron-down text-emerald-600"></i>{% endif %}
                                 </a>
                             </th>
@@ -80,7 +95,9 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="{% if user.is_staff or user_can_manage %}7{% else %}6{% endif %}" class="px-3 py-8 text-center text-gray-500 italic">No applicants yet.</td>
+                                <td colspan="{% if user.is_staff or user_can_manage %}7{% else %}6{% endif %}" class="px-3 py-8 text-center text-gray-500 italic">
+                                    {% if viewing_rejected %}No rejected applicants.{% else %}No applicants yet.{% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -91,34 +108,44 @@
         {% if user.is_staff or user_can_manage %}
             <div class="mt-4 flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <span class="text-sm font-medium text-gray-700">With selected:</span>
-                {% if user.is_staff %}
-                    <button type="submit" name="action" value="mark_speaker" formaction="{{ program.urls.applicants_bulk_speaker }}" class="inline-flex items-center px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors">
-                        <i class="fas fa-microphone mr-2"></i> Mark as Speaker
-                    </button>
-                    <button type="submit" name="action" value="unmark_speaker" formaction="{{ program.urls.applicants_bulk_speaker }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
-                        <i class="fas fa-times mr-2"></i> Unmark as Speaker
-                    </button>
-                {% endif %}
-                {% if user_can_manage %}
-                    <button type="submit" formaction="{{ program.urls.applicants_bulk_reject }}" class="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors" onclick="return confirm('Are you sure you want to reject the selected applicants?')">
-                        <i class="fas fa-ban mr-2"></i> Reject
-                    </button>
+                {% if viewing_rejected %}
+                    {% if user_can_manage %}
+                        <button type="submit" name="action" value="restore_pending" formaction="{{ program.urls.applicants_bulk_reject }}" class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded transition-colors">
+                            <i class="fas fa-undo mr-2"></i> Restore to Pending
+                        </button>
+                    {% endif %}
+                {% else %}
+                    {% if user.is_staff %}
+                        <button type="submit" name="action" value="mark_speaker" formaction="{{ program.urls.applicants_bulk_speaker }}" class="inline-flex items-center px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors">
+                            <i class="fas fa-microphone mr-2"></i> Mark as Speaker
+                        </button>
+                        <button type="submit" name="action" value="unmark_speaker" formaction="{{ program.urls.applicants_bulk_speaker }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
+                            <i class="fas fa-times mr-2"></i> Unmark as Speaker
+                        </button>
+                    {% endif %}
+                    {% if user_can_manage %}
+                        <button type="submit" name="action" value="reject" formaction="{{ program.urls.applicants_bulk_reject }}" class="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors" onclick="return confirm('Are you sure you want to reject the selected applicants?')">
+                            <i class="fas fa-ban mr-2"></i> Reject
+                        </button>
+                    {% endif %}
                 {% endif %}
             </div>
         {% endif %}
     </form>
 
-    <div class="mt-6 flex flex-wrap gap-3">
-        <a href="{{ program.urls.applicants_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
-            <i class="fas fa-upload mr-2"></i> Bulk Load Applicants
-        </a>
-        <a href="{{ program.urls.scores_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
-            <i class="fas fa-upload mr-2"></i> Bulk Load Scores
-        </a>
-        <a href="{{ program.urls.applicants_csv }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
-            <i class="fas fa-download mr-2"></i> Export as CSV
-        </a>
-    </div>
+    {% if not viewing_rejected %}
+        <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{{ program.urls.applicants_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                <i class="fas fa-upload mr-2"></i> Bulk Load Applicants
+            </a>
+            <a href="{{ program.urls.scores_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                <i class="fas fa-upload mr-2"></i> Bulk Load Scores
+            </a>
+            <a href="{{ program.urls.applicants_csv }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                <i class="fas fa-download mr-2"></i> Export as CSV
+            </a>
+        </div>
+    {% endif %}
 
     {% if user.is_staff or user_can_manage %}
         <script>
