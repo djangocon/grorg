@@ -38,6 +38,8 @@ class ProgramAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "completed"]
     list_display_links = ["id", "name"]
     prepopulated_fields = {"slug": ("name",)}
+    filter_horizontal = ["users"]
+    autocomplete_fields = ["created_by"]
 
 
 @admin.register(models.Question)
