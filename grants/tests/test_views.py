@@ -83,7 +83,9 @@ class TestApplicantViewAndScoring:
         assert score.score == 4.0
         assert score.comment == "Great application"
 
-    def test_update_score_tracks_history(self, client_logged_in, program, applicant, user):
+    def test_update_score_tracks_history(
+        self, client_logged_in, program, applicant, user
+    ):
         baker.make("grants.Score", applicant=applicant, user=user, score=3.0)
         client_logged_in.post(
             f"/{program.slug}/applicants/{applicant.id}/",

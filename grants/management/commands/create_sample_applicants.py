@@ -39,4 +39,6 @@ class Command(BaseCommand):
                 self.stdout.write(f"Created: {name}")
             else:
                 self.stdout.write(f"Already exists: {name}")
-        self.stdout.write(self.style.SUCCESS(f"Done. Created {created} new applicants."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Done. Created {created} new applicants.")
+        )

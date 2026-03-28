@@ -6,26 +6,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('grants', '0015_applicant_applied_to_speak'),
+        ("grants", "0015_applicant_applied_to_speak"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicant',
-            name='rejection_reason',
-            field=models.TextField(blank=True, default=''),
+            model_name="applicant",
+            name="rejection_reason",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='applicant',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')], default='pending', max_length=20),
+            model_name="applicant",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("accepted", "Accepted"),
+                    ("rejected", "Rejected"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
-            model_name='program',
-            name='created_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_programs', to=settings.AUTH_USER_MODEL),
+            model_name="program",
+            name="created_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="created_programs",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

@@ -59,7 +59,9 @@ class Program(models.Model):
 
     def user_can_manage(self, user):
         """Returns True if user is a superuser or the program creator."""
-        return user.is_superuser or (self.created_by_id and self.created_by_id == user.pk)
+        return user.is_superuser or (
+            self.created_by_id and self.created_by_id == user.pk
+        )
 
 
 class Resource(models.Model):
@@ -75,7 +77,9 @@ class Resource(models.Model):
         ("accomodation", "Accomodation"),
     ]
 
-    program = models.ForeignKey(Program, related_name="resources", on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program, related_name="resources", on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     amount = models.PositiveIntegerField()
@@ -113,7 +117,9 @@ class Question(models.Model):
         ("integer", "Integer value"),
     ]
 
-    program = models.ForeignKey(Program, related_name="questions", on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program, related_name="questions", on_delete=models.CASCADE
+    )
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     question = models.TextField()
     required = models.BooleanField(default=False)
@@ -140,7 +146,9 @@ class Applicant(models.Model):
         ("rejected", "Rejected"),
     ]
 
-    program = models.ForeignKey(Program, related_name="applicants", on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program, related_name="applicants", on_delete=models.CASCADE
+    )
     name = models.TextField()
     email = models.EmailField()
 
@@ -185,8 +193,12 @@ class Allocation(models.Model):
     An allocation of some Resources to an Applicant.
     """
 
-    applicant = models.ForeignKey(Applicant, related_name="allocations", on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, related_name="allocations", on_delete=models.CASCADE)
+    applicant = models.ForeignKey(
+        Applicant, related_name="allocations", on_delete=models.CASCADE
+    )
+    resource = models.ForeignKey(
+        Resource, related_name="allocations", on_delete=models.CASCADE
+    )
     amount = models.PositiveIntegerField()
 
     class Meta:
@@ -200,8 +212,12 @@ class Answer(models.Model):
     An applicant's answer to a question.
     """
 
-    applicant = models.ForeignKey(Applicant, related_name="answers", on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
+    applicant = models.ForeignKey(
+        Applicant, related_name="answers", on_delete=models.CASCADE
+    )
+    question = models.ForeignKey(
+        Question, related_name="answers", on_delete=models.CASCADE
+    )
     answer = models.TextField()
 
     class Meta:
@@ -215,8 +231,12 @@ class Score(models.Model):
     A score and optional comment on an applicant by a user.
     """
 
-    applicant = models.ForeignKey(Applicant, related_name="scores", on_delete=models.CASCADE)
-    user = models.ForeignKey("users.User", related_name="scores", on_delete=models.CASCADE)
+    applicant = models.ForeignKey(
+        Applicant, related_name="scores", on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        "users.User", related_name="scores", on_delete=models.CASCADE
+    )
     score = models.FloatField(
         blank=True,
         null=True,
@@ -236,7 +256,8 @@ class Score(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(score__isnull=True) | (models.Q(score__gte=1) & models.Q(score__lte=5)),
+                condition=models.Q(score__isnull=True)
+                | (models.Q(score__gte=1) & models.Q(score__lte=5)),
                 name="score_range_1_to_5",
             ),
         ]
