@@ -17,6 +17,7 @@ from ..forms import (
     ProgramEditForm,
     ProgramForm,
     QuestionForm,
+    RejectApplicantForm,
     ResourceForm,
     ScoreForm,
 )
@@ -28,9 +29,7 @@ def index(request):
         request,
         "index.html",
         {
-            "accessible_programs": Program.objects.filter(
-                users__pk=request.user.pk
-            ).order_by("name"),
+            "accessible_programs": Program.objects.filter(users__pk=request.user.pk).order_by("name"),
         },
     )
 
@@ -51,7 +50,9 @@ class CreateProgram(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        program = form.save()
+        program = form.save(commit=False)
+        program.created_by = self.request.user
+        program.save()
         program.users.add(self.request.user)
         return redirect(program.urls.view)
 
@@ -75,6 +76,7 @@ class ProgramMixin:
     def render_to_response(self, context, **kwargs):
         context["program"] = self.program
         context["user_allowed_program"] = self.program.user_allowed(self.request.user)
+        context["user_can_manage"] = self.program.user_can_manage(self.request.user)
         return super().render_to_response(context, **kwargs)
 
 
@@ -91,9 +93,7 @@ class ProgramHome(ProgramMixin, TemplateView):
             user.num_votes = user.scores.filter(applicant__program=self.program).count()
         return {
             "num_applicants": self.program.applicants.count(),
-            "num_scored": self.request.user.scores.filter(
-                applicant__program=self.program
-            ).count(),
+            "num_scored": self.request.user.scores.filter(applicant__program=self.program).count(),
             "users": users,
         }
 
@@ -186,9 +186,7 @@ class ProgramApply(ProgramMixin, FormView):
                 "text": forms.CharField,
                 "textarea": forms.CharField,
                 "integer": forms.IntegerField,
-            }[question.type](
-                required=question.required, widget=widget, label=question.question
-            )
+            }[question.type](required=question.required, widget=widget, label=question.question)
         return type("ApplicationForm", (BaseApplyForm,), fields)
 
     def form_valid(self, form):
@@ -234,18 +232,16 @@ class ProgramApplicants(ProgramMixin, ListView):
             self.sort = "applied"
         # Fetch applicants
         # but don't let a user see their own request
+        # and exclude rejected applicants from the review queue
         applicants = list(
             self.program.applicants.exclude(
-                Q(email=self.request.user.email)
-                | Q(name=self.request.user.get_full_name())
+                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name()) | Q(status="rejected")
             )
             .prefetch_related("scores")
             .order_by("-applied")
         )
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
@@ -277,16 +273,13 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
         # but don't let a user see their own request
         applicants = list(
             self.program.applicants.exclude(
-                Q(email=self.request.user.email)
-                | Q(name=self.request.user.get_full_name())
+                Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
             )
             .prefetch_related("scores")
             .order_by("-applied")
         )
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
@@ -357,35 +350,39 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
         for question in questions:
             question.answer = question.answers.filter(applicant=applicant).first()
         # See if we already scored this one
-        score = Score.objects.filter(
-            applicant=applicant, user=self.request.user
-        ).first()
+        score = Score.objects.filter(applicant=applicant, user=self.request.user).first()
         old_score = score.score if score else None
         if score:
             all_scores = Score.objects.filter(applicant=applicant)
             form = ScoreForm(instance=score)
         else:
             all_scores = None
+        can_manage = self.program.user_can_manage(request.user)
+        reject_form = RejectApplicantForm() if can_manage else None
         if request.method == "POST":
-            form = ScoreForm(request.POST, instance=score)
-            if form.is_valid():
-                new_score = form.save(commit=False)
-                new_score.applicant = applicant
-                new_score.user = self.request.user
-                if old_score and new_score.score != old_score:
-                    new_score.score_history = ",".join(
-                        [
-                            x.strip()
-                            for x in (new_score.score_history or "").split(",")
-                            if x.strip()
-                        ]
-                        + ["%.1f" % old_score]
-                    )
-                new_score.save()
-                if "random_after" in request.POST:
-                    return redirect(self.program.urls.score_random)
-                else:
-                    return redirect(".")
+            if "reject" in request.POST and can_manage:
+                reject_form = RejectApplicantForm(request.POST)
+                if reject_form.is_valid():
+                    applicant.status = "rejected"
+                    applicant.rejection_reason = reject_form.cleaned_data["rejection_reason"]
+                    applicant.save()
+                    return redirect(self.program.urls.applicants)
+            else:
+                form = ScoreForm(request.POST, instance=score)
+                if form.is_valid():
+                    new_score = form.save(commit=False)
+                    new_score.applicant = applicant
+                    new_score.user = self.request.user
+                    if old_score and new_score.score != old_score:
+                        new_score.score_history = ",".join(
+                            [x.strip() for x in (new_score.score_history or "").split(",") if x.strip()]
+                            + ["%.1f" % old_score]
+                        )
+                    new_score.save()
+                    if "random_after" in request.POST:
+                        return redirect(self.program.urls.score_random)
+                    else:
+                        return redirect(".")
         else:
             form = ScoreForm(instance=score)
         return self.render_to_response(
@@ -394,6 +391,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                 "questions": questions,
                 "all_scores": all_scores,
                 "form": form,
+                "reject_form": reject_form,
             }
         )
 
@@ -412,6 +410,7 @@ class RandomUnscoredApplicant(ProgramMixin, View):
                 Q(scores__user=self.request.user)
                 | Q(email=self.request.user.email)
                 | Q(name=self.request.user.get_full_name())
+                | Q(status="rejected")
             )
             .order_by("?")
             .first()
@@ -521,5 +520,28 @@ class BulkUpdateSpeakerStatus(ProgramMixin, View):
                 program=self.program,
                 pk__in=applicant_ids,
             ).update(applied_to_speak=new_status)
+
+        return redirect(self.program.urls.applicants)
+
+
+class BulkRejectApplicants(ProgramMixin, View):
+    """
+    Allows superusers and program creators to bulk reject applicants.
+    """
+
+    def dispatch(self, *args, **kwargs):
+        result = super().dispatch(*args, **kwargs)
+        if hasattr(self, "request") and not self.program.user_can_manage(self.request.user):
+            raise Http404("Access denied")
+        return result
+
+    def post(self, request):
+        applicant_ids = request.POST.getlist("applicant_ids")
+
+        if applicant_ids:
+            Applicant.objects.filter(
+                program=self.program,
+                pk__in=applicant_ids,
+            ).update(status="rejected")
 
         return redirect(self.program.urls.applicants)

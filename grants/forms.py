@@ -13,11 +13,7 @@ class QuestionForm(forms.ModelForm):
 
     def clean_type(self):
         type = self.cleaned_data["type"]
-        if (
-            self.instance
-            and type != self.instance.type
-            and self.instance.answers.exists()
-        ):
+        if self.instance and type != self.instance.type and self.instance.answers.exists():
             raise forms.ValidationError("Cannot change once this question has answers")
         return type
 
@@ -33,9 +29,7 @@ class BaseApplyForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data["email"]
         if self.program.applicants.filter(email=email).exists():
-            raise forms.ValidationError(
-                "An application with that email address has already been submitted."
-            )
+            raise forms.ValidationError("An application with that email address has already been submitted.")
         return email
 
 
@@ -93,9 +87,7 @@ class AllocationForm(forms.ModelForm):
     def clean_resource(self):
         resource = self.cleaned_data["resource"]
         if self.applicant.allocations.filter(resource=resource).exists():
-            raise forms.ValidationError(
-                "That resource is already allocated. Delete it if you wish to change it."
-            )
+            raise forms.ValidationError("That resource is already allocated. Delete it if you wish to change it.")
         return resource
 
 
@@ -120,6 +112,14 @@ class ProgramForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+class RejectApplicantForm(forms.Form):
+    rejection_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Optional reason for rejection"}),
+        label="Reason",
+    )
 
 
 class ProgramEditForm(forms.ModelForm):

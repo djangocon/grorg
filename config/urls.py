@@ -42,6 +42,10 @@ urlpatterns = [
         program.BulkUpdateSpeakerStatus.as_view(),
     ),
     path(
+        "<str:program>/applicants/bulk-reject/",
+        program.BulkRejectApplicants.as_view(),
+    ),
+    path(
         "<str:program>/applicants/bulk_scores/",
         bulk_load.BulkLoadScores.as_view(),
     ),

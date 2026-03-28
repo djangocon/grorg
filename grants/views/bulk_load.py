@@ -31,16 +31,12 @@ class BulkLoader(ProgramMixin):
         # If there's a CSV, load it into the database, otherwise retrieve
         # the one we stored there before.
         if "csv" in request.FILES:
-            csv_obj = UploadedCSV.objects.create(
-                csv=request.FILES["csv"].read().decode()
-            )
+            csv_obj = UploadedCSV.objects.create(csv=request.FILES["csv"].read().decode())
         else:
             csv_obj = UploadedCSV.objects.get(pk=request.POST["csv_id"])
 
         # We always get a CSV file - parse it.
-        reader = csv.reader(
-            [x + "\n" for x in csv_obj.csv.split("\n") if len(x.strip())]
-        )
+        reader = csv.reader([x + "\n" for x in csv_obj.csv.split("\n") if len(x.strip())])
 
         rows = list(reader)
         headers = rows[0]
@@ -49,9 +45,7 @@ class BulkLoader(ProgramMixin):
         fields = collections.OrderedDict(
             (
                 name,
-                forms.ChoiceField(
-                    choices=column_choices, required=required, label=label
-                ),
+                forms.ChoiceField(choices=column_choices, required=required, label=label),
             )
             for name, required, label in self.get_targets()
         )
@@ -63,11 +57,7 @@ class BulkLoader(ProgramMixin):
             # Save and import!
             errors = []
             successful = 0
-            target_map = {
-                name: int(value)
-                for name, value in form.cleaned_data.items()
-                if name != "csv_id" and value
-            }
+            target_map = {name: int(value) for name, value in form.cleaned_data.items() if name != "csv_id" and value}
             self.before_import(rows, target_map)
             for i, row in enumerate(rows[1:]):
                 try:
@@ -130,16 +120,12 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
 
         # Check for duplicate email within this import
         if not self.program.duplicate_emails and email in self._imported_emails:
-            raise ValueError(
-                f"Duplicate email '{email}' - this email already appeared earlier in the CSV"
-            )
+            raise ValueError(f"Duplicate email '{email}' - this email already appeared earlier in the CSV")
         self._imported_emails.add(email)
         if self.program.duplicate_emails:
             applicant = None
         else:
-            applicant = Applicant.objects.filter(
-                program=self.program, email=row[target_map["email"]]
-            ).first()
+            applicant = Applicant.objects.filter(program=self.program, email=row[target_map["email"]]).first()
         if not applicant:
             applicant = Applicant(
                 program=self.program,
@@ -156,9 +142,7 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
         if "timestamp" in target_map:
             for time_format in self.time_formats:
                 try:
-                    applicant.applied = datetime.datetime.strptime(
-                        row[target_map["timestamp"]], time_format
-                    )
+                    applicant.applied = datetime.datetime.strptime(row[target_map["timestamp"]], time_format)
                 except ValueError:
                     pass
         applicant.save()
@@ -169,10 +153,7 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
                 question = self.program.questions.get(pk=key.lstrip("q"))
                 if question.type == "boolean":
                     answer = str(
-                        not any(
-                            (raw_answer.lower().strip() == no_word)
-                            for no_word in ("no", "false", "off", "", "0")
-                        )
+                        not any((raw_answer.lower().strip() == no_word) for no_word in ("no", "false", "off", "", "0"))
                     )
                 elif question.type == "integer":
                     if not raw_answer.strip():
@@ -182,14 +163,11 @@ class BulkLoadApplicants(BulkLoader, TemplateView):
                             answer = str(int(raw_answer.strip()))
                         except ValueError:
                             raise ValueError(
-                                "Invalid integer value for question %s: %s"
-                                % (question.question, raw_answer)
+                                "Invalid integer value for question %s: %s" % (question.question, raw_answer)
                             )
                 else:
                     answer = raw_answer
-                answer_obj = Answer.objects.filter(
-                    applicant=applicant, question=question
-                ).first()
+                answer_obj = Answer.objects.filter(applicant=applicant, question=question).first()
                 if not answer_obj:
                     answer_obj = Answer(
                         applicant=applicant,
@@ -216,9 +194,7 @@ class BulkLoadScores(BulkLoader, TemplateView):
     def process_row(self, row, target_map):
         applicant = Applicant.objects.get(email=row[target_map["email"]])
 
-        score = Score.objects.get_or_create(
-            applicant=applicant, user=self.request.user
-        )[0]
+        score = Score.objects.get_or_create(applicant=applicant, user=self.request.user)[0]
         score_value = row[target_map["score"]]
         try:
             score.score = float(score_value)
