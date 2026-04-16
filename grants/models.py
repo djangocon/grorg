@@ -63,6 +63,14 @@ class Program(models.Model):
             self.created_by_id and self.created_by_id == user.pk
         )
 
+    def applicants_visible_to(self, user):
+        """
+        Applicants the given user is allowed to see in the review flow.
+        Excludes the user's own application (identified by email — the only
+        reliable link since Applicant has no FK to User).
+        """
+        return self.applicants.exclude(email=user.email)
+
 
 class Resource(models.Model):
     """

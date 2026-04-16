@@ -23,6 +23,26 @@ class TestProgramModel:
     def test_urls_apply(self, program):
         assert program.urls.apply == "/test-program/apply/"
 
+    def test_applicants_visible_to_excludes_user_by_email(self, program, user):
+        own = baker.make("grants.Applicant", program=program, email=user.email, name="Self")
+        other = baker.make("grants.Applicant", program=program, email="other@example.com", name="Other")
+        visible = list(program.applicants_visible_to(user))
+        assert own not in visible
+        assert other in visible
+
+    def test_applicants_visible_to_does_not_exclude_by_name(self, program, user):
+        """Name collisions must NOT cause other applicants to be hidden."""
+        user.first_name = "Ada"
+        user.last_name = "Lovelace"
+        user.save()
+        same_name = baker.make(
+            "grants.Applicant",
+            program=program,
+            email="different@example.com",
+            name="Ada Lovelace",
+        )
+        assert same_name in list(program.applicants_visible_to(user))
+
 
 class TestQuestionModel:
     def test_str_returns_question_text(self, question):
