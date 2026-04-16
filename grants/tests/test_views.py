@@ -96,6 +96,50 @@ class TestApplicantViewAndScoring:
         assert "3.0" in score.score_history
 
 
+class TestOwnApplicationHiddenFromReviewer:
+    """A user who also applied must never see their own application."""
+
+    def test_list_excludes_own_application(self, client_logged_in, program, user):
+        own = baker.make("grants.Applicant", program=program, email=user.email, name="Self")
+        other = baker.make("grants.Applicant", program=program, email="o@example.com", name="Other")
+        response = client_logged_in.get(f"/{program.slug}/applicants/")
+        body = response.content.decode()
+        assert other.name in body
+        assert own.name not in body
+
+    def test_detail_returns_404_for_own_application(self, client_logged_in, program, user):
+        own = baker.make("grants.Applicant", program=program, email=user.email, name="Self")
+        response = client_logged_in.get(f"/{program.slug}/applicants/{own.id}/")
+        assert response.status_code == 404
+
+    def test_allocations_returns_404_for_own_application(self, client_logged_in, program, user):
+        own = baker.make("grants.Applicant", program=program, email=user.email, name="Self")
+        response = client_logged_in.get(
+            f"/{program.slug}/applicants/{own.id}/allocations/"
+        )
+        assert response.status_code == 404
+
+    def test_random_unscored_skips_own_application(self, client_logged_in, program, user):
+        baker.make("grants.Applicant", program=program, email=user.email, name="Self")
+        response = client_logged_in.get(f"/{program.slug}/applicants/random-unscored/")
+        assert response.status_code == 302
+        assert response.url.rstrip("/").endswith("/applicants")
+
+    def test_same_name_applicant_still_visible(self, client_logged_in, program, user):
+        """Regression: applicants with the same name as the reviewer must not be hidden."""
+        user.first_name = "Ada"
+        user.last_name = "Lovelace"
+        user.save()
+        namesake = baker.make(
+            "grants.Applicant",
+            program=program,
+            email="different@example.com",
+            name="Ada Lovelace",
+        )
+        response = client_logged_in.get(f"/{program.slug}/applicants/")
+        assert namesake.name in response.content.decode()
+
+
 class TestProgramQuestionsView:
     def test_requires_authentication(self, client, program):
         response = client.get(f"/{program.slug}/questions/")

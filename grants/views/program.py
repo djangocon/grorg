@@ -7,7 +7,7 @@ from django import forms
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
@@ -91,19 +91,27 @@ class ProgramHome(ProgramMixin, TemplateView):
     template_name = "program-home.html"
 
     def get_context_data(self):
-        active_applicants = self.program.applicants.exclude(status="rejected")
+        active_applicants = self.program.applicants_visible_to(
+            self.request.user
+        ).exclude(status="rejected")
         users = list(self.program.users.all())
         for user in users:
-            user.num_votes = user.scores.filter(
-                applicant__program=self.program,
-                applicant__status__in=["pending", "accepted"],
-            ).count()
+            user.num_votes = (
+                user.scores.filter(
+                    applicant__program=self.program,
+                    applicant__status__in=["pending", "accepted"],
+                )
+                .exclude(applicant__email=user.email)
+                .count()
+            )
         return {
             "num_applicants": active_applicants.count(),
             "num_scored": self.request.user.scores.filter(
                 applicant__program=self.program,
                 applicant__status__in=["pending", "accepted"],
-            ).count(),
+            )
+            .exclude(applicant__email=self.request.user.email)
+            .count(),
             "users": users,
         }
 
@@ -247,9 +255,7 @@ class ProgramApplicants(ProgramMixin, ListView):
         self.viewing_rejected = (
             can_manage and self.request.GET.get("status") == "rejected"
         )
-        qs = self.program.applicants.exclude(
-            Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
-        )
+        qs = self.program.applicants_visible_to(self.request.user)
         if self.viewing_rejected:
             qs = qs.filter(status="rejected")
         else:
@@ -321,15 +327,10 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
             self.sort = "score"
         else:
             self.sort = "applied"
-        # Fetch applicants
-        # but don't let a user see their own request
-        # and exclude rejected applicants
+        # Fetch applicants visible to this user, excluding rejected
         applicants = list(
-            self.program.applicants.exclude(
-                Q(email=self.request.user.email)
-                | Q(name=self.request.user.get_full_name())
-                | Q(status="rejected")
-            )
+            self.program.applicants_visible_to(self.request.user)
+            .exclude(status="rejected")
             .prefetch_related("scores")
             .order_by("-applied")
         )
@@ -400,9 +401,9 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
     template_name = "applicant-view.html"
 
     def get(self, request, applicant_id):
-        applicant = self.program.applicants.exclude(
-            Q(email=self.request.user.email) | Q(name=self.request.user.get_full_name())
-        ).get(pk=applicant_id)
+        applicant = get_object_or_404(
+            self.program.applicants_visible_to(self.request.user), pk=applicant_id
+        )
         questions = list(self.program.questions.order_by("order"))
         for question in questions:
             question.answer = question.answers.filter(applicant=applicant).first()
@@ -477,12 +478,8 @@ class RandomUnscoredApplicant(ProgramMixin, View):
 
     def get(self, request):
         applicant = (
-            self.program.applicants.exclude(
-                Q(scores__user=self.request.user)
-                | Q(email=self.request.user.email)
-                | Q(name=self.request.user.get_full_name())
-                | Q(status="rejected")
-            )
+            self.program.applicants_visible_to(self.request.user)
+            .exclude(Q(scores__user=self.request.user) | Q(status="rejected"))
             .order_by("?")
             .first()
         )
@@ -500,9 +497,13 @@ class ApplicantAllocations(ProgramMixin, FormView):
     form_class = AllocationForm
     template_name = "applicant-allocations.html"
 
-    def dispatch(self, *args, **kwargs):
-        self.applicant = Applicant.objects.get(pk=kwargs.pop("applicant_id"))
-        return super().dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        applicant_id = kwargs.pop("applicant_id")
+        self.program = get_object_or_404(Program, slug=kwargs["program"])
+        self.applicant = get_object_or_404(
+            self.program.applicants_visible_to(request.user), pk=applicant_id
+        )
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
