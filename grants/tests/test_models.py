@@ -61,6 +61,60 @@ class TestQuestionModel:
         assert question.can_delete() is False
 
 
+class TestQuestionFiltering:
+    def test_can_filter_true_for_filterable_boolean(self, program):
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
+        assert q.can_filter() is True
+
+    def test_can_filter_true_for_filterable_integer(self, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        assert q.can_filter() is True
+
+    def test_can_filter_false_when_flag_off(self, program):
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=False)
+        assert q.can_filter() is False
+
+    def test_can_filter_false_for_text_even_if_flagged(self, program):
+        q = baker.make("grants.Question", program=program, type="text", filterable=True)
+        assert q.can_filter() is False
+
+    def test_integer_filter_ranges_empty_when_no_answers(self, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        assert q.integer_filter_ranges() == []
+
+    def test_integer_filter_ranges_single_value(self, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        applicant = baker.make("grants.Applicant", program=program, email="a@example.com")
+        baker.make("grants.Answer", applicant=applicant, question=q, answer="42")
+        assert q.integer_filter_ranges() == [(42, 42)]
+
+    def test_integer_filter_ranges_returns_disjoint_buckets(self, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        for i, val in enumerate([10, 50, 100, 200, 500, 1000, 2000, 5000]):
+            applicant = baker.make("grants.Applicant", program=program, email=f"a{i}@example.com")
+            baker.make("grants.Answer", applicant=applicant, question=q, answer=str(val))
+        ranges = q.integer_filter_ranges()
+        assert ranges, "should produce buckets"
+        # Buckets must be disjoint and cover min..max
+        for (_, high), (next_low, _) in zip(ranges, ranges[1:]):
+            assert high < next_low
+        assert ranges[0][0] == 10
+        assert ranges[-1][1] == 5000
+
+    def test_integer_filter_ranges_ignores_non_numeric(self, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        a1 = baker.make("grants.Applicant", program=program, email="a1@example.com")
+        a2 = baker.make("grants.Applicant", program=program, email="a2@example.com")
+        baker.make("grants.Answer", applicant=a1, question=q, answer="100")
+        baker.make("grants.Answer", applicant=a2, question=q, answer="not a number")
+        # Should not crash and should still produce a valid range from the one parseable value
+        assert q.integer_filter_ranges() == [(100, 100)]
+
+    def test_integer_filter_ranges_empty_for_non_integer_question(self, program):
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
+        assert q.integer_filter_ranges() == []
+
+
 class TestApplicantModel:
     def test_str_returns_name(self, applicant):
         assert str(applicant) == "Test Applicant"
