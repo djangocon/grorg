@@ -11,6 +11,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Required</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Filter</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -19,12 +20,14 @@
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">Name</td>
                         <td class="px-6 py-4 text-sm text-gray-500">Text</td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-600"></i></td>
+                        <td class="px-6 py-4 text-center text-gray-400">—</td>
                         <td class="px-6 py-4 text-right text-sm text-gray-400 italic">Built-in</td>
                     </tr>
                     <tr class="bg-gray-50">
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">Email</td>
                         <td class="px-6 py-4 text-sm text-gray-500">Email</td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-600"></i></td>
+                        <td class="px-6 py-4 text-center text-gray-400">—</td>
                         <td class="px-6 py-4 text-right text-sm text-gray-400 italic">Built-in</td>
                     </tr>
                     {% for question in questions %}
@@ -34,6 +37,15 @@
                             <td class="px-6 py-4 text-center">
                                 {% if question.required %}
                                     <i class="fas fa-check text-green-600"></i>
+                                {% else %}
+                                    <i class="fas fa-xmark text-gray-400"></i>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if question.can_filter %}
+                                    <i class="fas fa-filter text-emerald-600" title="Shown as a filter on the applicants list"></i>
+                                {% elif question.filterable %}
+                                    <span class="text-xs text-gray-400 italic" title="Filtering is only supported on Yes/No and Integer questions">N/A</span>
                                 {% else %}
                                     <i class="fas fa-xmark text-gray-400"></i>
                                 {% endif %}

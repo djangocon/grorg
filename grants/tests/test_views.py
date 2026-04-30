@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from model_bakery import baker
 
 from grants.models import Applicant, Program, Score
@@ -68,6 +69,86 @@ class TestProgramApplicantsView:
         assert applicant.name in response.content.decode()
 
 
+class TestProgramApplicantsFilters:
+    """Filter UI is only shown to managers; make user the program manager."""
+
+    @pytest.fixture
+    def manager_client(self, client_logged_in, program, user):
+        program.created_by = user
+        program.save()
+        return client_logged_in
+
+    def test_filterable_boolean_question_appears_in_filter_ui(self, manager_client, program):
+        baker.make(
+            "grants.Question",
+            program=program,
+            type="boolean",
+            question="Is this your first time?",
+            filterable=True,
+        )
+        response = manager_client.get(f"/{program.slug}/applicants/")
+        body = response.content.decode()
+        assert "Filter by Question" in body
+        assert "Is this your first time?" in body
+
+    def test_non_filterable_boolean_question_hidden_from_filter_ui(self, manager_client, program):
+        baker.make(
+            "grants.Question",
+            program=program,
+            type="boolean",
+            question="Some private flag",
+            filterable=False,
+        )
+        response = manager_client.get(f"/{program.slug}/applicants/")
+        assert "Filter by Question" not in response.content.decode()
+
+    def test_boolean_yes_filter_filters_applicants(self, manager_client, program):
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
+        yes_applicant = baker.make("grants.Applicant", program=program, name="YesPerson", email="yes@example.com")
+        no_applicant = baker.make("grants.Applicant", program=program, name="NoPerson", email="no@example.com")
+        baker.make("grants.Answer", applicant=yes_applicant, question=q, answer="True")
+        baker.make("grants.Answer", applicant=no_applicant, question=q, answer="False")
+        response = manager_client.get(f"/{program.slug}/applicants/?q{q.id}=yes")
+        body = response.content.decode()
+        assert "YesPerson" in body
+        assert "NoPerson" not in body
+
+    def test_integer_question_shows_range_buttons(self, manager_client, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True, question="Years experience")
+        for i, val in enumerate([1, 5, 10, 20]):
+            a = baker.make("grants.Applicant", program=program, email=f"a{i}@example.com")
+            baker.make("grants.Answer", applicant=a, question=q, answer=str(val))
+        response = manager_client.get(f"/{program.slug}/applicants/")
+        body = response.content.decode()
+        assert "Years experience" in body
+        # At least one range button exists with low-high href format
+        assert f"q{q.id}=1-" in body or f"q{q.id}=" in body
+
+    def test_integer_range_filter_filters_applicants(self, manager_client, program):
+        q = baker.make("grants.Question", program=program, type="integer", filterable=True)
+        small = baker.make("grants.Applicant", program=program, name="SmallBudget", email="s@example.com")
+        large = baker.make("grants.Applicant", program=program, name="LargeBudget", email="l@example.com")
+        baker.make("grants.Answer", applicant=small, question=q, answer="100")
+        baker.make("grants.Answer", applicant=large, question=q, answer="5000")
+        response = manager_client.get(f"/{program.slug}/applicants/?q{q.id}=0-1000")
+        body = response.content.decode()
+        assert "SmallBudget" in body
+        assert "LargeBudget" not in body
+
+    def test_filter_does_not_apply_for_non_managers(self, client_logged_in, program):
+        """Non-managers should not be able to use filters even if URL has them."""
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
+        yes_applicant = baker.make("grants.Applicant", program=program, name="YesPerson", email="yes@example.com")
+        no_applicant = baker.make("grants.Applicant", program=program, name="NoPerson", email="no@example.com")
+        baker.make("grants.Answer", applicant=yes_applicant, question=q, answer="True")
+        baker.make("grants.Answer", applicant=no_applicant, question=q, answer="False")
+        response = client_logged_in.get(f"/{program.slug}/applicants/?q{q.id}=yes")
+        body = response.content.decode()
+        # Filter should be ignored — both applicants visible
+        assert "YesPerson" in body
+        assert "NoPerson" in body
+
+
 class TestApplicantViewAndScoring:
     def test_view_applicant(self, client_logged_in, program, applicant):
         response = client_logged_in.get(f"/{program.slug}/applicants/{applicant.id}/")
@@ -83,9 +164,7 @@ class TestApplicantViewAndScoring:
         assert score.score == 4.0
         assert score.comment == "Great application"
 
-    def test_update_score_tracks_history(
-        self, client_logged_in, program, applicant, user
-    ):
+    def test_update_score_tracks_history(self, client_logged_in, program, applicant, user):
         baker.make("grants.Score", applicant=applicant, user=user, score=3.0)
         client_logged_in.post(
             f"/{program.slug}/applicants/{applicant.id}/",
@@ -114,9 +193,7 @@ class TestOwnApplicationHiddenFromReviewer:
 
     def test_allocations_returns_404_for_own_application(self, client_logged_in, program, user):
         own = baker.make("grants.Applicant", program=program, email=user.email, name="Self")
-        response = client_logged_in.get(
-            f"/{program.slug}/applicants/{own.id}/allocations/"
-        )
+        response = client_logged_in.get(f"/{program.slug}/applicants/{own.id}/allocations/")
         assert response.status_code == 404
 
     def test_random_unscored_skips_own_application(self, client_logged_in, program, user):
