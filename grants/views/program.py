@@ -25,6 +25,17 @@ from ..forms import (
 from ..models import Answer, Applicant, Program, Question, Resource, Score
 
 
+def _parse_integer_range(value):
+    """Parses a 'low-high' string from a filter query param into (int, int)."""
+    if not value or "-" not in value:
+        return None
+    low_str, _, high_str = value.partition("-")
+    try:
+        return int(low_str), int(high_str)
+    except (TypeError, ValueError):
+        return None
+
+
 def index(request):
     return render(
         request,
@@ -256,18 +267,37 @@ class ProgramApplicants(ProgramMixin, ListView):
         else:
             qs = qs.exclude(status="rejected")
 
-        # Boolean question filters (managers only)
-        self.boolean_questions = list(self.program.questions.filter(type="boolean").order_by("order"))
+        # Question-based filters (managers only); opt-in via Question.filterable.
+        self.filter_questions = list(
+            self.program.questions.filter(filterable=True, type__in=["boolean", "integer"]).order_by("order")
+        )
         self.active_filters = {}
         if can_manage:
-            for bq in self.boolean_questions:
-                filter_val = self.request.GET.get(f"q{bq.id}")
-                if filter_val in ("yes", "no"):
-                    self.active_filters[bq.id] = filter_val
+            for fq in self.filter_questions:
+                filter_val = self.request.GET.get(f"q{fq.id}")
+                if not filter_val:
+                    continue
+                if fq.type == "boolean" and filter_val in ("yes", "no"):
+                    self.active_filters[fq.id] = filter_val
                     answer_value = "True" if filter_val == "yes" else "False"
-                    matching_applicant_ids = Answer.objects.filter(question=bq, answer=answer_value).values_list(
+                    matching_applicant_ids = Answer.objects.filter(question=fq, answer=answer_value).values_list(
                         "applicant_id", flat=True
                     )
+                    qs = qs.filter(pk__in=matching_applicant_ids)
+                elif fq.type == "integer":
+                    parsed = _parse_integer_range(filter_val)
+                    if parsed is None:
+                        continue
+                    low, high = parsed
+                    matching_applicant_ids = []
+                    for ans in Answer.objects.filter(question=fq):
+                        try:
+                            v = int(ans.answer)
+                        except (TypeError, ValueError):
+                            continue
+                        if low <= v <= high:
+                            matching_applicant_ids.append(ans.applicant_id)
+                    self.active_filters[fq.id] = filter_val
                     qs = qs.filter(pk__in=matching_applicant_ids)
 
         applicants = list(qs.prefetch_related("scores").order_by("-applied"))
@@ -288,20 +318,29 @@ class ProgramApplicants(ProgramMixin, ListView):
         context = super().get_context_data()
         context["sort"] = self.sort
         context["viewing_rejected"] = self.viewing_rejected
-        # Build filter URLs for boolean questions
+        # Build filter UI data for each filterable question
         base_params = {k: v for k, v in self.request.GET.items()}
-        for bq in self.boolean_questions:
-            bq.active_filter = self.active_filters.get(bq.id, "")
-            param_key = f"q{bq.id}"
-            # URL for "yes" filter
-            yes_params = {k: v for k, v in base_params.items() if k != param_key}
-            yes_params[param_key] = "yes"
-            bq.filter_url_yes = "?" + "&".join(f"{k}={v}" for k, v in yes_params.items())
-            # URL for "no" filter
-            no_params = {k: v for k, v in base_params.items() if k != param_key}
-            no_params[param_key] = "no"
-            bq.filter_url_no = "?" + "&".join(f"{k}={v}" for k, v in no_params.items())
-        context["boolean_questions"] = self.boolean_questions
+        for fq in self.filter_questions:
+            fq.active_filter = self.active_filters.get(fq.id, "")
+            param_key = f"q{fq.id}"
+            other_params = {k: v for k, v in base_params.items() if k != param_key}
+            base_query = "&".join(f"{k}={v}" for k, v in other_params.items())
+            prefix = "?" + base_query + ("&" if base_query else "")
+
+            if fq.type == "boolean":
+                fq.filter_options = [
+                    ("yes", "Yes", f"{prefix}{param_key}=yes"),
+                    ("no", "No", f"{prefix}{param_key}=no"),
+                ]
+            elif fq.type == "integer":
+                fq.filter_options = []
+                for low, high in fq.integer_filter_ranges():
+                    val = f"{low}-{high}"
+                    label = str(low) if low == high else f"{low}–{high}"
+                    fq.filter_options.append((val, label, f"{prefix}{param_key}={val}"))
+            else:
+                fq.filter_options = []
+        context["filter_questions"] = self.filter_questions
         context["active_filters"] = self.active_filters
         return context
 
