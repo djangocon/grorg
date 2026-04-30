@@ -30,9 +30,7 @@ def index(request):
         request,
         "index.html",
         {
-            "accessible_programs": Program.objects.filter(
-                users__pk=request.user.pk
-            ).order_by("name"),
+            "accessible_programs": Program.objects.filter(users__pk=request.user.pk).order_by("name"),
         },
     )
 
@@ -91,9 +89,7 @@ class ProgramHome(ProgramMixin, TemplateView):
     template_name = "program-home.html"
 
     def get_context_data(self):
-        active_applicants = self.program.applicants_visible_to(
-            self.request.user
-        ).exclude(status="rejected")
+        active_applicants = self.program.applicants_visible_to(self.request.user).exclude(status="rejected")
         users = list(self.program.users.all())
         for user in users:
             user.num_votes = (
@@ -204,9 +200,7 @@ class ProgramApply(ProgramMixin, FormView):
                 "text": forms.CharField,
                 "textarea": forms.CharField,
                 "integer": forms.IntegerField,
-            }[question.type](
-                required=question.required, widget=widget, label=question.question
-            )
+            }[question.type](required=question.required, widget=widget, label=question.question)
         return type("ApplicationForm", (BaseApplyForm,), fields)
 
     def form_valid(self, form):
@@ -246,15 +240,16 @@ class ProgramApplicants(ProgramMixin, ListView):
 
     def get_queryset(self):
         # Work out sort
-        if self.request.GET.get("sort", None) == "score":
+        sort_param = self.request.GET.get("sort", None)
+        if sort_param == "score":
             self.sort = "score"
+        elif sort_param == "scores":
+            self.sort = "scores"
         else:
             self.sort = "applied"
         # Managers can view rejected applicants via ?status=rejected
         can_manage = self.program.user_can_manage(self.request.user)
-        self.viewing_rejected = (
-            can_manage and self.request.GET.get("status") == "rejected"
-        )
+        self.viewing_rejected = can_manage and self.request.GET.get("status") == "rejected"
         qs = self.program.applicants_visible_to(self.request.user)
         if self.viewing_rejected:
             qs = qs.filter(status="rejected")
@@ -262,9 +257,7 @@ class ProgramApplicants(ProgramMixin, ListView):
             qs = qs.exclude(status="rejected")
 
         # Boolean question filters (managers only)
-        self.boolean_questions = list(
-            self.program.questions.filter(type="boolean").order_by("order")
-        )
+        self.boolean_questions = list(self.program.questions.filter(type="boolean").order_by("order"))
         self.active_filters = {}
         if can_manage:
             for bq in self.boolean_questions:
@@ -272,22 +265,23 @@ class ProgramApplicants(ProgramMixin, ListView):
                 if filter_val in ("yes", "no"):
                     self.active_filters[bq.id] = filter_val
                     answer_value = "True" if filter_val == "yes" else "False"
-                    matching_applicant_ids = Answer.objects.filter(
-                        question=bq, answer=answer_value
-                    ).values_list("applicant_id", flat=True)
+                    matching_applicant_ids = Answer.objects.filter(question=bq, answer=answer_value).values_list(
+                        "applicant_id", flat=True
+                    )
                     qs = qs.filter(pk__in=matching_applicant_ids)
 
         applicants = list(qs.prefetch_related("scores").order_by("-applied"))
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.score_count = len(applicant.scores.all())
+            applicant.has_scored = any(s.user_id == self.request.user.pk for s in applicant.scores.all())
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
                 applicant.average_score = -1
         if self.sort == "score":
             applicants.sort(key=lambda a: a.average_score, reverse=True)
+        elif self.sort == "scores":
+            applicants.sort(key=lambda a: a.score_count)
         return applicants
 
     def get_context_data(self):
@@ -302,9 +296,7 @@ class ProgramApplicants(ProgramMixin, ListView):
             # URL for "yes" filter
             yes_params = {k: v for k, v in base_params.items() if k != param_key}
             yes_params[param_key] = "yes"
-            bq.filter_url_yes = "?" + "&".join(
-                f"{k}={v}" for k, v in yes_params.items()
-            )
+            bq.filter_url_yes = "?" + "&".join(f"{k}={v}" for k, v in yes_params.items())
             # URL for "no" filter
             no_params = {k: v for k, v in base_params.items() if k != param_key}
             no_params[param_key] = "no"
@@ -335,9 +327,7 @@ class ProgramApplicantsCsv(ProgramMixin, ListView):
             .order_by("-applied")
         )
         for applicant in applicants:
-            applicant.has_scored = applicant.scores.filter(
-                user=self.request.user
-            ).exists()
+            applicant.has_scored = applicant.scores.filter(user=self.request.user).exists()
             if applicant.has_scored:
                 applicant.average_score = applicant.average_score()
             else:
@@ -401,16 +391,12 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
     template_name = "applicant-view.html"
 
     def get(self, request, applicant_id):
-        applicant = get_object_or_404(
-            self.program.applicants_visible_to(self.request.user), pk=applicant_id
-        )
+        applicant = get_object_or_404(self.program.applicants_visible_to(self.request.user), pk=applicant_id)
         questions = list(self.program.questions.order_by("order"))
         for question in questions:
             question.answer = question.answers.filter(applicant=applicant).first()
         # See if we already scored this one
-        score = Score.objects.filter(
-            applicant=applicant, user=self.request.user
-        ).first()
+        score = Score.objects.filter(applicant=applicant, user=self.request.user).first()
         old_score = score.score if score else None
         if score:
             all_scores = Score.objects.filter(applicant=applicant)
@@ -429,9 +415,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                 reject_form = RejectApplicantForm(request.POST)
                 if reject_form.is_valid():
                     applicant.status = "rejected"
-                    applicant.rejection_reason = reject_form.cleaned_data[
-                        "rejection_reason"
-                    ]
+                    applicant.rejection_reason = reject_form.cleaned_data["rejection_reason"]
                     applicant.save()
                     return redirect(self.program.urls.applicants)
             else:
@@ -442,11 +426,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                     new_score.user = self.request.user
                     if old_score and new_score.score != old_score:
                         new_score.score_history = ",".join(
-                            [
-                                x.strip()
-                                for x in (new_score.score_history or "").split(",")
-                                if x.strip()
-                            ]
+                            [x.strip() for x in (new_score.score_history or "").split(",") if x.strip()]
                             + ["%.1f" % old_score]
                         )
                     new_score.save()
@@ -500,9 +480,7 @@ class ApplicantAllocations(ProgramMixin, FormView):
     def dispatch(self, request, *args, **kwargs):
         applicant_id = kwargs.pop("applicant_id")
         self.program = get_object_or_404(Program, slug=kwargs["program"])
-        self.applicant = get_object_or_404(
-            self.program.applicants_visible_to(request.user), pk=applicant_id
-        )
+        self.applicant = get_object_or_404(self.program.applicants_visible_to(request.user), pk=applicant_id)
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -603,9 +581,7 @@ class BulkRejectApplicants(ProgramMixin, View):
 
     def dispatch(self, *args, **kwargs):
         result = super().dispatch(*args, **kwargs)
-        if hasattr(self, "request") and not self.program.user_can_manage(
-            self.request.user
-        ):
+        if hasattr(self, "request") and not self.program.user_can_manage(self.request.user):
             raise Http404("Access denied")
         return result
 
@@ -632,9 +608,7 @@ class BulkApproveApplicants(ProgramMixin, View):
 
     def dispatch(self, *args, **kwargs):
         result = super().dispatch(*args, **kwargs)
-        if hasattr(self, "request") and not self.program.user_can_manage(
-            self.request.user
-        ):
+        if hasattr(self, "request") and not self.program.user_can_manage(self.request.user):
             raise Http404("Access denied")
         return result
 
