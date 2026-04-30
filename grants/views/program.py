@@ -318,26 +318,34 @@ class ProgramApplicants(ProgramMixin, ListView):
         context = super().get_context_data()
         context["sort"] = self.sort
         context["viewing_rejected"] = self.viewing_rejected
-        # Build filter UI data for each filterable question
+        # Build filter UI data for each filterable question.
+        # Clicking an active filter clears it (toggle off); clicking another
+        # value replaces it.
         base_params = {k: v for k, v in self.request.GET.items()}
         for fq in self.filter_questions:
             fq.active_filter = self.active_filters.get(fq.id, "")
             param_key = f"q{fq.id}"
             other_params = {k: v for k, v in base_params.items() if k != param_key}
             base_query = "&".join(f"{k}={v}" for k, v in other_params.items())
-            prefix = "?" + base_query + ("&" if base_query else "")
+
+            def url_for(value, _other=base_query, _key=param_key, _active=fq.active_filter):
+                # If this value is already active, link clears the param.
+                params = _other
+                if value != _active:
+                    params = f"{params}&{_key}={value}" if params else f"{_key}={value}"
+                return "?" + params if params else "?"
 
             if fq.type == "boolean":
                 fq.filter_options = [
-                    ("yes", "Yes", f"{prefix}{param_key}=yes"),
-                    ("no", "No", f"{prefix}{param_key}=no"),
+                    ("yes", "Yes", url_for("yes")),
+                    ("no", "No", url_for("no")),
                 ]
             elif fq.type == "integer":
                 fq.filter_options = []
                 for low, high in fq.integer_filter_ranges():
                     val = f"{low}-{high}"
                     label = str(low) if low == high else f"{low}–{high}"
-                    fq.filter_options.append((val, label, f"{prefix}{param_key}={val}"))
+                    fq.filter_options.append((val, label, url_for(val)))
             else:
                 fq.filter_options = []
         context["filter_questions"] = self.filter_questions

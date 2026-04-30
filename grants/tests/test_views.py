@@ -135,6 +135,17 @@ class TestProgramApplicantsFilters:
         assert "SmallBudget" in body
         assert "LargeBudget" not in body
 
+    def test_active_filter_link_clears_itself(self, manager_client, program):
+        """Clicking the currently-active filter option should produce a URL
+        that omits its query param (toggle off)."""
+        q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
+        response = manager_client.get(f"/{program.slug}/applicants/?q{q.id}=yes")
+        body = response.content.decode()
+        # The "Yes" link must not point back to ?q{id}=yes when yes is active.
+        assert f'href="?q{q.id}=yes"' not in body
+        # The "No" link should still point to ?q{id}=no.
+        assert f'href="?q{q.id}=no"' in body
+
     def test_filter_does_not_apply_for_non_managers(self, client_logged_in, program):
         """Non-managers should not be able to use filters even if URL has them."""
         q = baker.make("grants.Question", program=program, type="boolean", filterable=True)
