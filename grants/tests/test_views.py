@@ -186,6 +186,39 @@ class TestApplicantViewAndScoring:
         assert "3.0" in score.score_history
 
 
+class TestScoringClosed:
+    """When `Program.completed` is True, no new scores can be submitted."""
+
+    def test_score_submission_blocked_when_closed(self, client_logged_in, program, applicant, user):
+        program.completed = True
+        program.save()
+        response = client_logged_in.post(
+            f"/{program.slug}/applicants/{applicant.id}/",
+            {"score": 4.0, "comment": "Should not save"},
+        )
+        assert response.status_code == 404
+        assert not Score.objects.filter(applicant=applicant, user=user).exists()
+
+    def test_applicant_view_still_loads_when_closed(self, client_logged_in, program, applicant):
+        program.completed = True
+        program.save()
+        response = client_logged_in.get(f"/{program.slug}/applicants/{applicant.id}/")
+        assert response.status_code == 200
+
+    def test_random_unscored_redirects_when_closed(self, client_logged_in, program, applicant):
+        program.completed = True
+        program.save()
+        response = client_logged_in.get(f"/{program.slug}/applicants/random-unscored/")
+        assert response.status_code == 302
+        assert response.url.rstrip("/").endswith("/applicants")
+
+    def test_bulk_load_scores_blocked_when_closed(self, client_logged_in, program):
+        program.completed = True
+        program.save()
+        response = client_logged_in.get(f"/{program.slug}/applicants/bulk_scores/")
+        assert response.status_code == 404
+
+
 class TestOwnApplicationHiddenFromReviewer:
     """A user who also applied must never see their own application."""
 
@@ -311,24 +344,40 @@ class TestEditProgramView:
         assert response.status_code == 302
         assert "login" in response.url
 
-    def test_requires_staff_access(self, client, program, user):
+    def test_member_without_manage_rights_denied(self, client, program, user):
         program.users.add(user)
         client.force_login(user)
         response = client.get(f"/{program.slug}/edit/")
         assert response.status_code == 404
 
-    def test_accessible_to_staff(self, client, program, user):
+    def test_staff_user_who_is_not_creator_denied(self, client, program, user):
         user.is_staff = True
+        user.save()
+        program.users.add(user)
+        client.force_login(user)
+        response = client.get(f"/{program.slug}/edit/")
+        assert response.status_code == 404
+
+    def test_accessible_to_program_creator(self, client, program, user):
+        program.users.add(user)
+        program.created_by = user
+        program.save()
+        client.force_login(user)
+        response = client.get(f"/{program.slug}/edit/")
+        assert response.status_code == 200
+
+    def test_accessible_to_superuser(self, client, program, user):
+        user.is_superuser = True
         user.save()
         program.users.add(user)
         client.force_login(user)
         response = client.get(f"/{program.slug}/edit/")
         assert response.status_code == 200
 
-    def test_can_update_program_name(self, client, program, user):
-        user.is_staff = True
-        user.save()
+    def test_creator_can_update_program_name(self, client, program, user):
         program.users.add(user)
+        program.created_by = user
+        program.save()
         client.force_login(user)
         response = client.post(
             f"/{program.slug}/edit/",
@@ -338,10 +387,10 @@ class TestEditProgramView:
         program.refresh_from_db()
         assert program.name == "Updated Name"
 
-    def test_can_update_join_code(self, client, program, user):
-        user.is_staff = True
-        user.save()
+    def test_creator_can_update_join_code(self, client, program, user):
         program.users.add(user)
+        program.created_by = user
+        program.save()
         client.force_login(user)
         response = client.post(
             f"/{program.slug}/edit/",
@@ -350,3 +399,32 @@ class TestEditProgramView:
         assert response.status_code == 302
         program.refresh_from_db()
         assert program.join_code == "new-secret-code"
+
+    def test_creator_can_close_scoring(self, client, program, user):
+        program.users.add(user)
+        program.created_by = user
+        program.save()
+        client.force_login(user)
+        response = client.post(
+            f"/{program.slug}/edit/",
+            {
+                "name": program.name,
+                "join_code": program.join_code or program.slug,
+                "completed": "on",
+            },
+        )
+        assert response.status_code == 302
+        program.refresh_from_db()
+        assert program.completed is True
+
+    def test_non_creator_post_does_not_save(self, client, program, user):
+        program.users.add(user)
+        client.force_login(user)
+        original_name = program.name
+        response = client.post(
+            f"/{program.slug}/edit/",
+            {"name": "Hijacked", "join_code": program.join_code or program.slug},
+        )
+        assert response.status_code == 404
+        program.refresh_from_db()
+        assert program.name == original_name

@@ -3,12 +3,18 @@
 {% block title %}{{ program }}{% endblock %}
 
 {% block content %}
-    {% if request.user.is_staff %}
+    {% if user_can_manage %}
         <div class="mb-4 flex justify-end">
             <a href="{{ program.urls.edit }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
                 <i class="fas fa-cog mr-2"></i>
                 Edit Program
             </a>
+        </div>
+    {% endif %}
+    {% if program.completed %}
+        <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-sm flex items-center">
+            <i class="fas fa-lock mr-2"></i>
+            Scoring is closed for this program. Reviewers can no longer submit scores.
         </div>
     {% endif %}
     <div class="bg-emerald-50 rounded-lg border-2 border-emerald-300 p-6 mb-6">
@@ -66,7 +72,7 @@
                 <a href="{{ program.urls.applicants }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
                     View All
                 </a>
-                {% if num_scored < num_applicants %}
+                {% if num_scored < num_applicants and not program.completed %}
                     <a href="{{ program.urls.score_random }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md transition-colors text-sm">
                         Score Random
                     </a>

@@ -182,9 +182,11 @@
             <a href="{{ program.urls.applicants_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
                 <i class="fas fa-upload mr-2"></i> Bulk Load Applicants
             </a>
-            <a href="{{ program.urls.scores_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
-                <i class="fas fa-upload mr-2"></i> Bulk Load Scores
-            </a>
+            {% if not program.completed %}
+                <a href="{{ program.urls.scores_bulk }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
+                    <i class="fas fa-upload mr-2"></i> Bulk Load Scores
+                </a>
+            {% endif %}
             <a href="{{ program.urls.applicants_csv }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors text-sm">
                 <i class="fas fa-download mr-2"></i> Export as CSV
             </a>
