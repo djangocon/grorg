@@ -129,4 +129,8 @@ class ApproveApplicantForm(forms.Form):
 class ProgramEditForm(forms.ModelForm):
     class Meta:
         model = Program
-        fields = ["name", "join_code"]
+        fields = ["name", "join_code", "completed"]
+        labels = {"completed": "Scoring closed"}
+        help_texts = {
+            "completed": "When checked, scoring is closed and reviewers can no longer submit scores.",
+        }

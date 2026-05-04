@@ -125,21 +125,22 @@ class ProgramHome(ProgramMixin, TemplateView):
 
 class EditProgram(ProgramMixin, UpdateView):
     """
-    Allows staff users to edit program settings.
+    Allows superusers and the program creator to edit program settings.
     """
 
     template_name = "program-edit.html"
     form_class = ProgramEditForm
     model = Program
 
-    def dispatch(self, *args, **kwargs):
-        result = super().dispatch(*args, **kwargs)
-        # If we got a redirect (e.g., to login), return it
-        if hasattr(result, "status_code") and result.status_code in (301, 302):
-            return result
-        if not self.request.user.is_staff:
-            raise Http404("Staff access required")
-        return result
+    def get(self, request, *args, **kwargs):
+        if not self.program.user_can_manage(request.user):
+            raise Http404("Only superusers and the program creator can edit this program")
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not self.program.user_can_manage(request.user):
+            raise Http404("Only superusers and the program creator can edit this program")
+        return super().post(request, *args, **kwargs)
 
     def get_object(self):
         return self.program
@@ -465,6 +466,8 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                     applicant.rejection_reason = reject_form.cleaned_data["rejection_reason"]
                     applicant.save()
                     return redirect(self.program.urls.applicants)
+            elif self.program.completed:
+                raise Http404("Scoring is closed for this program")
             else:
                 form = ScoreForm(request.POST, instance=score)
                 if form.is_valid():
@@ -491,6 +494,7 @@ class ProgramApplicantView(ProgramMixin, TemplateView):
                 "form": form,
                 "reject_form": reject_form,
                 "approve_form": approve_form,
+                "scoring_closed": self.program.completed,
             }
         )
 
@@ -504,6 +508,8 @@ class RandomUnscoredApplicant(ProgramMixin, View):
     """
 
     def get(self, request):
+        if self.program.completed:
+            return redirect(self.program.urls.applicants)
         applicant = (
             self.program.applicants_visible_to(self.request.user)
             .exclude(Q(scores__user=self.request.user) | Q(status="rejected"))
